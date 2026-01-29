@@ -276,29 +276,6 @@ return (
       </div>
     </header>
 
-    {isFortuneOpen && (
-  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-    <div className="text-center">
-      <h2 className="text-white text-xl mb-8">運命の1枚を選んでください</h2>
-      <div className="flex gap-4">
-        {fortuneCards.map((card, index) => (
-          <div 
-            key={index}
-            onClick={() => setSelectedIndex(index)}
-            className="cursor-pointer"
-          >
-            {/* ここにカードの見た目。selectedIndex が null なら裏向き、
-                自分の index と一致したら表向きにするアニメーションを入れる */}
-          </div>
-        ))}
-      </div>
-      <button onClick={() => setIsFortuneOpen(false)} className="mt-8 text-gray-400">
-        閉じる
-      </button>
-      </div>
-    </div>
-)}
-
     {/* スクロールするエリアの開始（ヘッダー分だけ上に余白） */}
     <div className="pt-10"></div>
 
@@ -307,7 +284,8 @@ return (
       <div className="flex items-center gap-8">
         <div className="relative p-[3px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-full shrink-0">
           <div className="bg-black p-0.5 rounded-full">
-            <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover" alt="Avatar" />
+            <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover" alt="Avatar"
+            onClick={startFortune}/>
           </div>  
         </div>
         <div className="flex-1 flex justify-around text-center">
@@ -587,6 +565,47 @@ return (
   <div className="text-center py-20 text-muted-foreground">
     <Heart className="w-12 h-12 mx-auto mb-4 opacity-20" />
     <p>お気に入りのカードがまだありません</p>
+  </div>
+)}
+
+{/* おみくじモーダル */}
+{isFortuneOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+    <div className="max-w-md w-full text-center">
+      <h2 className="text-white text-2xl font-bold mb-8 animate-bounce">運命の1枚！</h2>
+      
+      <div className="flex justify-center gap-4 mb-12">
+        {fortuneCards.map((card, index) => (
+          <div 
+            key={index}
+            onClick={() => setSelectedIndex(index)}
+            className={`relative w-24 h-32 transition-all duration-500 transform ${
+              selectedIndex === index ? 'scale-125 z-10' : 'hover:-translate-y-2'
+            }`}
+          >
+            {/* カードの見た目（選択されたら表、それ以外は裏） */}
+            <div className={`w-full h-full rounded-lg border-2 border-white/50 overflow-hidden shadow-xl ${selectedIndex === index ? '' : 'bg-gradient-to-br from-blue-900 to-indigo-900'}`}>
+              {selectedIndex === index ? (
+                <img src={card.image_url} className="w-full h-full object-cover" alt="Selected" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/30 text-xs font-bold uppercase tracking-widest">
+                  ?
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedIndex !== null && (
+        <button 
+          onClick={() => setIsFortuneOpen(false)}
+          className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-200 transition-colors"
+        >
+          結果を閉じる
+        </button>
+      )}
+    </div>
   </div>
 )}
   </div>
