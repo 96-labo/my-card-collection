@@ -159,7 +159,7 @@ const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     // 揺れの強さを計算
     const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
 
-    if (movement > 20) { // しきい値
+    if (movement > 25) { // しきい値
       setIsShaking(true); // 震えるアニメーションON
       
       setShakePower(prev => {
@@ -172,7 +172,7 @@ const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
       });
 
       // 揺れが止まったらアニメーションを消す
-      const timer = setTimeout(() => setIsShaking(false), 300);
+      const timer = setTimeout(() => setIsShaking(false), 200);
       return () => clearTimeout(timer);
     }
   };
@@ -289,32 +289,36 @@ const handleDelete = async (num: number) => {
     console.error(error);
   }
 };
-
-const startFortune = () => {
-  // collection(画像)とfavorites(お気に入り)を合体させて、その場で「持ち札リスト」を作る
-  const heldCards = Object.entries(collection)
-    .filter(([_, url]) => url !== null) // 画像があるものだけ
+const heldCards: Card[] = useMemo(() => {
+  return Object.entries(collection || {})
+    .filter(([_, url]) => url !== null)
     .map(([slot, url]) => ({
       slot_number: parseInt(slot),
       image_url: url as string,
-      is_favorite: !!favorites[parseInt(slot)]
+      is_favorite: !!favorites[parseInt(slot)] // favoritesからお気に入り状態を取得
     }));
-
-  console.log("現在認識している枚数:", heldCards.length);
-
+}, [collection, favorites]);
+const startFortune = () => {
   if (heldCards.length < 3) {
     alert(`カードが3枚以上必要です！(現在: ${heldCards.length}枚)`);
+    setShakePower(0);
     return;
   }
 
-  // 3枚選出
-  const selected = heldCards
+  // 1. heldCards はすでに正しい型になっているはずですが、念のため
+  //    シャッフルして3枚選出
+  const selected: Card[] = [...heldCards]
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
-  setFortuneCards(selected);
+  // 2. ここで正しく state にセットする
+  setFortuneCards(selected); 
+  
   setSelectedIndex(null);
   setIsFortuneOpen(true);
+  setShakePower(0);
+
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 };
 
 return (
