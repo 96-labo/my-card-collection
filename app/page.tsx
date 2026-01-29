@@ -539,7 +539,7 @@ return (
         : "opacity-50"
       }
     `}>
-      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
+      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/40 backdrop-blur-md">
         <img 
           src={cardImage || CARD_BACK_IMAGE} 
           alt="Preview" 
