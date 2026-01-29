@@ -284,8 +284,10 @@ return (
       <div className="flex items-center gap-8">
         <div className="relative p-[3px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-full shrink-0">
           <div className="bg-black p-0.5 rounded-full">
+            <button>
             <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover" alt="Avatar"
             onClick={startFortune}/>
+            </button>
           </div>  
         </div>
         <div className="flex-1 flex justify-around text-center">
