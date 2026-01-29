@@ -522,64 +522,77 @@ return (
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw] ">
-  {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
-  <DialogHeader className="mb-4">
-    <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10">
-      No.{num}
-    </DialogTitle>
-  </DialogHeader>
+              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-full h-full outline-none">
+  
+  {/* 1. 背景の暗転（画面全体を覆い、クリックで閉じる） */}
+  <div 
+    className="fixed inset-0 bg-black/90 backdrop-blur-md z-[-1] cursor-pointer" 
+    onClick={(e) => {
+      // ShadcnのDialogは内部的に閉じますが、明示的にクリック領域を確保
+    }}
+  />
 
-  <div className="relative flex flex-col items-center gap-12">
-    {/* カードプレビュー：おみくじ風の巨大化＆光彩エフェクト */}
-    <div className={`
-      relative w-64 transition-all duration-700 ease-out
-      ${cardImage 
-        ? "scale-110 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl" 
-        : "opacity-50"
-      }
-    `}>
-      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
-        <img 
-          src={cardImage || CARD_BACK_IMAGE} 
-          alt="Preview" 
-          className={`object-cover w-full h-full ${!cardImage && "grayscale opacity-20"}`} 
-        />  
-      </AspectRatio>
+  {/* 2. カードコンテナ（ここをクリックしても閉じるようにする） */}
+  <div 
+    className="relative flex flex-col items-center justify-center w-full h-full cursor-pointer"
+    onClick={() => {
+      // カード面や隙間をタップしたときにDialogを閉じるためのトリガー
+      // 実際にはDialogContentが閉じますが、ユーザー体験として「どこでも閉じる」を実現
+    }}
+  >
+    
+    <DialogHeader className="mb-6 pointer-events-none">
+      <DialogTitle className="text-purple-400/80 font-mono text-center tracking-[0.4em] text-xs uppercase">
+        No.{num} Rare Collection
+      </DialogTitle>
+    </DialogHeader>
+
+    {/* 3. カード本体と紫のネオン後光 */}
+    <div className="relative group pointer-events-none">
+      {/* 紫のネオン・グロー（後光） */}
+      <div className="absolute -inset-10 bg-purple-600/40 blur-[80px] rounded-full animate-pulse z-0" />
+      <div className="absolute -inset-20 bg-indigo-500/20 blur-[120px] rounded-full z-0" />
       
-      {/* 選ばれた時のような後光エフェクト */}
-      {cardImage && (
-        <div className="absolute -inset-4 bg-purple-500/20 blur-3xl -z-10 animate-pulse" />
-      )}
+      <div className="relative w-72 transition-all duration-500 transform scale-100 shadow-[0_0_50px_rgba(0,0,0,0.8)] z-10">
+        <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border border-purple-500/30 bg-black">
+          <img 
+            src={cardImage || CARD_BACK_IMAGE} 
+            alt="Preview" 
+            className="object-cover w-full h-full" 
+          />
+          {/* カード表面の反射光（ネオン感を出す） */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-purple-500/10 to-transparent" />
+        </AspectRatio>
+      </div>
     </div>
 
-    {/* 操作ボタン：おみくじの下部ボタンのように配置 */}
-    <div className="flex flex-col gap-4 w-72 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    {/* 4. 下部のアクションエリア */}
+    <div 
+      className="mt-12 flex flex-col gap-5 w-72 animate-in fade-in slide-in-from-bottom-6 duration-700"
+      onClick={(e) => e.stopPropagation()} // ボタンエリアだけはクリックしても閉じない
+    >
       <Button 
         variant="ghost" 
         className={`w-full h-14 rounded-full text-lg font-black tracking-widest transition-all duration-300 ${
           favorites[num] 
-            ? "bg-gradient-to-r from-red-500 to-purple-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]" 
-            : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+            ? "bg-white text-black shadow-[0_0_30px_rgba(168,85,247,0.6)]" 
+            : "bg-white/5 text-white border border-white/20 hover:bg-white/10"
         }`}
         onClick={() => toggleFavorite(num)}
       >
-        <Heart className={`mr-2 ${favorites[num] ? "fill-current" : ""}`} />
+        <Heart className={`mr-2 ${favorites[num] ? "fill-current text-red-500" : ""}`} />
         {favorites[num] ? "FAVORITED" : "ADD FAVORITE"}
       </Button>
 
-      {/* 閉じるヒント */}
-      <p className="text-center text-white/30 text-xs tracking-tighter animate-pulse">
-        TAP ANYWHERE TO BACK
+      <p className="text-center text-white/40 text-[10px] tracking-widest animate-pulse uppercase">
+        Tap anywhere to back
       </p>
 
-      {/* 削除ボタンは誤操作防止のため、さらに下に小さく配置 */}
       <Button 
         variant="ghost" 
         onClick={() => handleDelete(num)}
-        className="mt-4 text-white/10 hover:text-red-500 hover:bg-transparent transition-colors text-[10px]"
+        className="mt-4 text-white/10 hover:text-red-500 hover:bg-transparent transition-colors text-[9px]"
       >
-        <Trash2 size={12} className="mr-1" />
         DELETE FROM COLLECTION
       </Button>
     </div>
