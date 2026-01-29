@@ -511,7 +511,7 @@ return (
                           e.stopPropagation(); // ダイアログが開かないように制御
                           toggleFavorite(num);
                         }}
-                        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/95 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
                       >
                         <Heart 
                           size={16} 
@@ -539,7 +539,7 @@ return (
         : "opacity-50"
       }
     `}>
-      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/40 backdrop-blur-md">
+      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
         <img 
           src={cardImage || CARD_BACK_IMAGE} 
           alt="Preview" 
