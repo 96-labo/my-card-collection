@@ -595,15 +595,13 @@ return (
 )}
 
 {/* おみくじモーダル */}
-{/* おみくじモーダル */}
 {isFortuneOpen && (
   <div 
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden cursor-pointer"
-    onClick={() => setIsFortuneOpen(false)} // ← 背景のどこを押しても閉じる
-  >
+  onClick={() => setIsFortuneOpen(false)}
+  className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
     <div className="w-full h-full flex flex-col items-center justify-center">
       
-      {/* 1. タイトル部分 */}
+      {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
       {selectedIndex === null && (
         <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">運命の1枚を選べ...</h2>
       )}
@@ -616,26 +614,18 @@ return (
           return (
             <div 
               key={index}
-              onClick={(e) => {
-                // まだ選んでいない時だけ選択処理をする
-                if (selectedIndex === null) {
-                  e.stopPropagation(); // 背景の「閉じる」イベントを無視して選択だけ行う
-                  setSelectedIndex(index);
-                }
-                // すでに選択済みの時にカードを押した場合は、
-                // stopPropagationしないことで背景の「閉じる」が発動し、画面が閉じます
-              }}
+              onClick={() => selectedIndex === null && setSelectedIndex(index)}
               className={`
-                absolute transition-all duration-700 ease-out
+                absolute transition-all duration-700 ease-out cursor-pointer
                 ${isSelected 
-                  ? 'z-50 scale-[2.5] rotate-0' 
+                  ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
                   : isAnySelected
-                    ? 'opacity-0 scale-50 pointer-events-none' 
-                    : `relative scale-100 hover:-translate-y-4`
+                    ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
+                    : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
                 }
               `}
             >
-              {/* カード本体 */}
+              {/* カードの見た目 */}
               <div className={`
                 w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
                 ${isSelected ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]' : 'border-white/20'}
@@ -653,11 +643,16 @@ return (
         })}
       </div>
 
-      {/* ガイドメッセージ（ボタンの代わりに「タップで戻る」と表示してもおしゃれです） */}
+      {/* 結果発表後のボタン */}
       {selectedIndex !== null && (
-        <p className="mt-20 text-white/50 text-sm animate-pulse">
-          画面のどこかをタップして戻る
-        </p>
+        <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <button 
+            onClick={() => setIsFortuneOpen(false)}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+          >
+            コレクションに戻る
+          </button>
+        </div>
       )}
     </div>
   </div>
