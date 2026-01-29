@@ -8,6 +8,7 @@ import { ImageIcon, ChevronLeft, Bell, MoreHorizontal, Link, ChevronDown, Plus, 
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { createBrowserClient } from '@supabase/ssr';
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,52 @@ interface Card {
 // 型の名前を「CardData」などに変えると安全です
 
 export default function GaristagramUI() {  
+
+  const requestPermission = async () => {
+  // iPhone(iOS)特有の許可申請
+  if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+    const permission = await (DeviceMotionEvent as any).requestPermission();
+    if (permission === 'granted') {
+      startShakeDetection();
+    }
+  } else {
+    // AndroidやPCなどはそのまま開始
+    startShakeDetection();
+  }
+};
+
+const startShakeDetection = () => {
+  let lastX = 0, lastY = 0, lastZ = 0;
+  const threshold = 15; // 振りの強さのしきい値（お好みで調整）
+
+  window.addEventListener('devicemotion', (event) => {
+    const acc = event.accelerationIncludingGravity;
+    if (!acc) return;
+
+    const deltaX = Math.abs(acc.x! - lastX);
+    const deltaY = Math.abs(acc.y! - lastY);
+    const deltaZ = Math.abs(acc.z! - lastZ);
+
+    if (deltaX + deltaY + deltaZ > threshold) {
+      // ここに「振った時」の演出を入れる！
+      handleShake(); 
+    }
+
+    lastX = acc.x!;
+    lastY = acc.y!;
+    lastZ = acc.z!;
+  });
+};
+
+const handleShake = () => {
+  // 例：おみくじをまだ開いていないなら開始する
+  if (!isFortuneOpen) {
+    startFortune();
+    // 軽くスマホを振動させる（Androidのみ）
+    if (navigator.vibrate) navigator.vibrate(200);
+  }
+};
+
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
   const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
