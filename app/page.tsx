@@ -499,12 +499,12 @@ return (
           return (
             <Dialog key={num}>
               <DialogTrigger asChild>
-                <Card className={`p-0 rounded-none overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-purple-400' : 'hover:scale-105'}`}>
+                <Card className={`p-0 rounded-none overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
                   <AspectRatio ratio={2.5 / 3.5} className="relative group">
                       <img
                         src={cardImage}
                         alt={`Card ${num}`}
-                        className="object-cover w-full h-full animate-in fade-in duration-500 bg-black/95 backdrop-blur-md p-4 overflow-hidden"
+                        className="object-cover w-full h-full animate-in fade-in duration-500"
                       />
                       <button 
                         onClick={(e) => {
@@ -522,7 +522,7 @@ return (
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw] bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw]">
   {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
   <DialogHeader className="mb-4">
     <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase">
@@ -530,7 +530,7 @@ return (
     </DialogTitle>
   </DialogHeader>
 
-  <div className="relative flex flex-col items-center gap-12 bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+  <div className="relative flex flex-col items-center gap-12">
     {/* カードプレビュー：おみくじ風の巨大化＆光彩エフェクト */}
     <div className={`
       relative w-64 transition-all duration-700 ease-out
