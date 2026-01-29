@@ -717,12 +717,8 @@ return (
           return (
             <div 
               key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-              if (selectedIndex === null) setSelectedIndex(index);
-              }}
               className={`
-                absolute transition-all duration-700 ease-out
+        absolute transition-all duration-700
                 ${isSelected 
                   ? 'z-50 scale-[2.5]' : 'relative scale-100'} // 選択：中央で巨大化
                   ${isShaking && selectedIndex === null ? 'animate-shake' : ''}
