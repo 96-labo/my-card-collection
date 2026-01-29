@@ -648,14 +648,12 @@ return (
 
       {/* 結果発表後のボタン */}
       {selectedIndex !== null && (
-        <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <button 
             onClick={() => setIsFortuneOpen(false)}
             className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
           >
-            コレクションに戻る
+            Anywhare Tap
           </button>
-        </div>
       )}
     </div>
   </div>
