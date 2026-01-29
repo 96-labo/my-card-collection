@@ -36,9 +36,7 @@ interface Card {
 // もし既存のコンポーネント名とぶつかってエラーが出るなら、
 // 型の名前を「CardData」などに変えると安全です
 
-export default function GaristagramUI() {
-  const [cards, setCards] = useState<Card[]>([]);
-  
+export default function GaristagramUI() {  
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
   const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
@@ -257,20 +255,30 @@ const handleDelete = async (num: number) => {
 };
 
 const startFortune = () => {
-  console.log("現在のカード枚数:", cards.length);
-  if (cards.length < 3) {
-    alert("カードが3枚以上必要です！");
+  // collection(画像)とfavorites(お気に入り)を合体させて、その場で「持ち札リスト」を作る
+  const heldCards = Object.entries(collection)
+    .filter(([_, url]) => url !== null) // 画像があるものだけ
+    .map(([slot, url]) => ({
+      slot_number: parseInt(slot),
+      image_url: url as string,
+      is_favorite: !!favorites[parseInt(slot)]
+    }));
+
+  console.log("現在認識している枚数:", heldCards.length);
+
+  if (heldCards.length < 3) {
+    alert(`カードが3枚以上必要です！(現在: ${heldCards.length}枚)`);
     return;
   }
 
-  // 1. シャッフルして3枚選出
-  const selected = [...cards]
+  // 3枚選出
+  const selected = heldCards
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
   setFortuneCards(selected);
-  setSelectedIndex(null); // 選択状態をリセット
-  setIsFortuneOpen(true); // モーダルを表示
+  setSelectedIndex(null);
+  setIsFortuneOpen(true);
 };
 
 return (
@@ -307,7 +315,7 @@ return (
           </div>  
         </div>
         <div className="flex-1 flex justify-around text-center">
-          <div><p className="font-extrabold text-lg">{cards.length}</p><p className="text-[11px] text-gray-400">投稿</p></div>
+          <div><p className="font-extrabold text-lg">{Object.keys(collection).length}</p><p className="text-[11px] text-gray-400">投稿</p></div>
           <div><p className="font-extrabold text-lg">16.8万</p><p className="text-[11px] text-gray-400">フォロワー</p></div>
           <div><p className="font-extrabold text-lg">300</p><p className="text-[11px] text-gray-400">フォロー中</p></div>
         </div>
