@@ -290,6 +290,7 @@ const handleDelete = async (num: number) => {
   }
 };
 const heldCards: Card[] = useMemo(() => {
+  if (!collection || Object.keys(collection).length === 0) return [];
   return Object.entries(collection || {})
     .filter(([_, url]) => url !== null)
     .map(([slot, url]) => ({
