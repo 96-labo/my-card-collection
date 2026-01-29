@@ -499,7 +499,7 @@ return (
           return (
             <Dialog key={num}>
               <DialogTrigger asChild>
-                <Card className={`p-0 rounded-none overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
+                <Card className={`p-0 rounded-none animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10 overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
                   <AspectRatio ratio={2.5 / 3.5} className="relative group">
                       <img
                         src={cardImage}
@@ -525,7 +525,7 @@ return (
               <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw] ">
   {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
   <DialogHeader className="mb-4">
-    <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase">
+    <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10">
       No.{num}
     </DialogTitle>
   </DialogHeader>
