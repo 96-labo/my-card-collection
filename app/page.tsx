@@ -619,7 +619,7 @@ return (
               if (selectedIndex === null) setSelectedIndex(index);
               }}
               className={`
-                absolute transition-all duration-700 ease-out cursor-pointer
+                absolute transition-all duration-700 ease-out
                 ${isSelected 
                   ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
                   : isAnySelected
