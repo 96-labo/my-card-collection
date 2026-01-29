@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect,useMemo } from 'react';
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -37,89 +37,12 @@ interface Card {
 // もし既存のコンポーネント名とぶつかってエラーが出るなら、
 // 型の名前を「CardData」などに変えると安全です
 
-export default function GaristagramUI() { 
+export default function GaristagramUI() {  
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
   const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
   // 1から300までの配列を作成
   const slots = Array.from({ length: 300 }, (_, i) => i + 1);
-
-
-  // 1. 宣言セクション
-const [isFortuneOpen, setIsFortuneOpen] = useState(false);
-const [shakePower, setShakePower] = useState(0); // 振りパワーの蓄積用
-
-// 所持カードを抽出（collectionは既存のカードデータ想定）
-const heldCards = Object.entries(collection)
-  .filter(([_, url]) => url !== null)
-  .map(([slot, url]) => ({
-    slot_number: parseInt(slot),
-    image_url: url as string,
-    is_favorite: !!favorites[parseInt(slot)]
-  }));
-
-// 2. ふるふる検知ロジック
-useEffect(() => {
-  const handleMotion = (event: DeviceMotionEvent) => {
-    // おみくじが既に開いている、またはカードが3枚未満なら何もしない
-    if (isFortuneOpen || heldCards.length < 3) return;
-
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    // 揺れの合計値を計算
-    const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-    
-    // しきい値（25以上で「強い振り」と判定）
-    if (movement > 25) {
-      setShakePower(prev => {
-        const next = prev + 5; // 振るたびに5%ずつゲージが溜まる
-        if (next >= 100) {
-          startFortune(); // 100%溜まったらおみくじ起動！
-          return 0;
-        }
-        return next;
-      });
-    }
-  };
-
-  window.addEventListener('devicemotion', handleMotion);
-  return () => window.removeEventListener('devicemotion', handleMotion);
-}, [isFortuneOpen, heldCards.length]); 
-
-useEffect(() => {
-  const handleMotion = (event: DeviceMotionEvent) => {
-    // すでにおみくじが開いている、またはコレクションが足りない時は無視
-    if (isFortuneOpen || heldCards.length < 3) return;
-
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-    
-    if (movement > 20) { // 強い振りを検知
-      setShakePower(prev => {
-        const next = prev + 10; // 振るたびに10%ずつ溜まる
-        if (next >= 100) {
-          triggerFortuneAnimation(); // 100%でスタート！
-          return 0;
-        }
-        return next;
-      });
-    }
-  };
-
-  window.addEventListener('devicemotion', handleMotion);
-  return () => window.removeEventListener('devicemotion', handleMotion);
-}, [isFortuneOpen]);
-
-const triggerFortuneAnimation = () => {
-  // ここでカードを選択して画面を表示する既存の startFortune ロジックを呼ぶ
-  startFortune();
-  
-  // 成功のバイブレーション（Android）
-  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
-};
 
   // 指定の画像（裏表紙）
   const CARD_BACK_IMAGE = "https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/back-cover.jpg"
@@ -167,6 +90,9 @@ const [conflictingSlots, setConflictingSlots] = useState<number[]>([]);
 
   // フォーチュンで選ばれた3枚のカードを保存する箱
 const [fortuneCards, setFortuneCards] = useState<Card[]>([]);
+
+// フォーチュンの画面（モーダル）を開いているかどうかの旗
+const [isFortuneOpen, setIsFortuneOpen] = useState(false);
 
 // どのカードを選択したかを記録する（最初は null）
 const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -691,17 +617,7 @@ return (
 )}
 
 {/* おみくじモーダル */}
-{isFortuneOpen && shakePower > 0 && (
-  <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-64 h-2 bg-white/10 rounded-full overflow-hidden border border-white/20 z-50">
-    <div 
-      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] transition-all duration-300"
-      style={{ width: `${shakePower}%` }}
-    />
-    <p className="text-white text-[10px] text-center mt-4 animate-pulse uppercase tracking-widest">
-      Shake to Summon!
-    </p>
-  </div>
-)}
+{isFortuneOpen && (
   <div 
   onClick={() => setIsFortuneOpen(false)}
   className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
@@ -765,7 +681,7 @@ return (
       )}
     </div>
   </div>
-
+)}
   </div>
 );
 }
