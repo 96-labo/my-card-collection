@@ -482,7 +482,7 @@ return (
     </div>
 
     {/* 300個のグリッドレイアウト */}
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-0.5 bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-0.5">
       {slots
       .filter((num) => {
       if (activeTab === 'fav') {
@@ -504,7 +504,7 @@ return (
                       <img
                         src={cardImage}
                         alt={`Card ${num}`}
-                        className="object-cover w-full h-full animate-in fade-in duration-500"
+                        className="object-cover w-full h-full animate-in fade-in duration-500 bg-black/95 backdrop-blur-md p-4 overflow-hidden"
                       />
                       <button 
                         onClick={(e) => {
