@@ -99,12 +99,27 @@ const [isFortuneOpen, setIsFortuneOpen] = useState(false);
 const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   // お気に入り切り替え関数
-  const toggleFavorite = (num: number) => {
-    setFavorites(prev => ({
-      ...prev,
-      [num]: !prev[num]
-    }));
-  };
+  const toggleFavorite = async (slotNumber: number) => {
+  // 1. 現在の状態を反転させる
+  const isNowFavorite = !favorites[slotNumber];
+
+  // 2. 画面上の表示（State）を即座に更新
+  setFavorites(prev => ({
+    ...prev,
+    [slotNumber]: isNowFavorite
+  }));
+
+  // 3. Supabaseのデータベースを更新（ここが重要！）
+  const { error } = await supabase
+    .from('card_collection')
+    .update({ is_favorite: isNowFavorite })
+    .eq('slot_number', slotNumber);
+
+  if (error) {
+    console.error('お気に入りの保存に失敗しました:', error);
+    // 失敗した場合はStateを元に戻す処理を入れるとより親切です
+  }
+};
 
   const [activeTab, setActiveTab] = useState<'all' | 'fav'>('all');
   const supabase = useMemo(() => createBrowserClient(
