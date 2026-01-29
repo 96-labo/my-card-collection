@@ -482,7 +482,7 @@ return (
     </div>
 
     {/* 300個のグリッドレイアウト */}
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-0.5">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-0.5 bg-black/95 backdrop-blur-md p-4 overflow-hidden">
       {slots
       .filter((num) => {
       if (activeTab === 'fav') {
