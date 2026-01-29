@@ -511,7 +511,7 @@ return (
                           e.stopPropagation(); // ダイアログが開かないように制御
                           toggleFavorite(num);
                         }}
-                        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/95 backdrop-blur-sm hover:bg-black/40 transition-colors"
                       >
                         <Heart 
                           size={16} 
