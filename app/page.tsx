@@ -504,7 +504,7 @@ return (
                       <img
                         src={cardImage}
                         alt={`Card ${num}`}
-                        className="object-cover w-full h-full animate-in fade-in duration-500"
+                        className="object-cover w-full h-full animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10"
                       />
                       <button 
                         onClick={(e) => {
@@ -522,7 +522,7 @@ return (
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw]">
+              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw] ">
   {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
   <DialogHeader className="mb-4">
     <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase">
@@ -544,7 +544,7 @@ return (
           src={cardImage || CARD_BACK_IMAGE} 
           alt="Preview" 
           className={`object-cover w-full h-full ${!cardImage && "grayscale opacity-20"}`} 
-        />
+        />  
       </AspectRatio>
       
       {/* 選ばれた時のような後光エフェクト */}
