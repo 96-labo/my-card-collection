@@ -37,7 +37,30 @@ interface Card {
 // もし既存のコンポーネント名とぶつかってエラーが出るなら、
 // 型の名前を「CardData」などに変えると安全です
 
-export default function GaristagramUI() {  
+export default function GaristagramUI() { 
+// 振りのパワー（0〜100）
+const [shakePower, setShakePower] = useState(0);
+// センサーが有効になったかどうか（iOS対策）
+const [isSensorActive, setIsSensorActive] = useState(false);
+// 今まさに振っている最中かどうか（アニメーション用）
+const [isShaking, setIsShaking] = useState(false);
+const enableSensor = async () => {
+  // iOS用の許可申請
+  if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+    try {
+      const permission = await (DeviceMotionEvent as any).requestPermission();
+      if (permission === 'granted') {
+        setIsSensorActive(true); // 許可されたらフラグを立てる
+      }
+    } catch (e) {
+      console.error("Sensor permission denied:", e);
+    }
+  } else {
+    // AndroidやPCなど（リクエスト不要なブラウザ）
+    setIsSensorActive(true);
+  }
+};
+
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
   const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
@@ -127,24 +150,36 @@ const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   ), []);
 
   useEffect(() => {
-  const fetchData = async () => {
-    const { data, error } = await supabase
-      .from('card_collection')
-      .select('*');
+  if (!isSensorActive || isFortuneOpen) return;
 
-    if (data) {
-      const newCol: Record<number, string> = {};
-      const newFav: Record<number, boolean> = {};
-      data.forEach(item => {
-        newCol[item.slot_number] = item.image_url;
-        newFav[item.slot_number] = item.is_favorite;
+  const handleMotion = (event: DeviceMotionEvent) => {
+    const acc = event.accelerationIncludingGravity;
+    if (!acc) return;
+
+    // 揺れの強さを計算
+    const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+
+    if (movement > 20) { // しきい値
+      setIsShaking(true); // 震えるアニメーションON
+      
+      setShakePower(prev => {
+        const next = prev + 5;
+        if (next >= 100) {
+          startFortune(); // 100%で起動！
+          return 0;
+        }
+        return next;
       });
-      setCollection(newCol);
-      setFavorites(newFav);
+
+      // 揺れが止まったらアニメーションを消す
+      const timer = setTimeout(() => setIsShaking(false), 300);
+      return () => clearTimeout(timer);
     }
   };
-  fetchData();
-}, []);
+
+  window.addEventListener('devicemotion', handleMotion);
+  return () => window.removeEventListener('devicemotion', handleMotion);
+}, [isSensorActive, isFortuneOpen]);
 
 // 1. 実際に保存を実行する関数（Supabase連携）
 const executeArchive = async () => {
@@ -299,6 +334,26 @@ return (
         <Bell size={24} />
         <MoreHorizontal size={24} />
       </div>
+
+      <button 
+  onClick={() => {
+    enableSensor(); // ここでセンサーを叩き起こす！
+    // 最初のクリックでおみくじの準備だけしておく
+  }}
+  className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
+>
+  <img src="..." className="w-20 h-20" />
+</button>
+
+{/* パワーゲージ（振っている間だけ見える） */}
+{shakePower > 0 && (
+  <div className="fixed top-1/2 left-1/2 -translate-x-1/2 w-48 h-1 bg-white/20 rounded-full">
+    <div 
+      className="h-full bg-purple-500 shadow-[0_0_10px_purple]" 
+      style={{ width: `${shakePower}%` }} 
+    />
+  </div>
+)}
     </header>
 
     {/* スクロールするエリアの開始（ヘッダー分だけ上に余白） */}
@@ -311,7 +366,8 @@ return (
           <div className="bg-black p-0.5 rounded-full">
             <button className="w-full h-full rounded-full overflow-hidden block">
             <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover" alt="Avatar"
-            onClick={startFortune}/>
+            onClick={() => {
+    enableSensor();}}/>
             </button>
           </div>  
         </div>
@@ -682,6 +738,26 @@ return (
     </div>
   </div>
 )}
+{/* 振りパワーゲージ：パワーがある時だけ表示 */}
+{!isFortuneOpen && shakePower > 0 && (
+  <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[100]">
+    <div className="w-64 flex flex-col items-center gap-4">
+      {/* ゲージの外枠 */}
+      <div className="w-full h-3 bg-white/10 rounded-full border border-white/20 overflow-hidden backdrop-blur-sm">
+        {/* パワーの伸びるバー */}
+        <div 
+          className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 transition-all duration-200 ease-out shadow-[0_0_20px_rgba(168,85,247,0.6)]"
+          style={{ width: `${shakePower}%` }}
+        />
+      </div>
+      {/* ガイドテキスト */}
+      <p className="text-white font-black italic tracking-widest animate-pulse text-sm drop-shadow-lg">
+        SHAKE IT! {shakePower}%
+      </p>
+    </div>
   </div>
+)}
+  </div>
+  
 );
 }
