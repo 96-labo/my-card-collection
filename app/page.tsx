@@ -596,40 +596,61 @@ return (
 
 {/* おみくじモーダル */}
 {isFortuneOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-    <div className="max-w-md w-full text-center">
-      <h2 className="text-white text-2xl font-bold mb-8 animate-bounce">運命の1枚！</h2>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-center">
       
-      <div className="flex justify-center gap-4 mb-12">
-        {fortuneCards.map((card, index) => (
-          <div 
-            key={index}
-            onClick={() => setSelectedIndex(index)}
-            className={`relative w-24 h-32 transition-all duration-500 transform ${
-              selectedIndex === index ? 'scale-125 z-10' : 'hover:-translate-y-2'
-            }`}
-          >
-            {/* カードの見た目（選択されたら表、それ以外は裏） */}
-            <div className={`w-full h-full rounded-lg border-2 border-white/50 overflow-hidden shadow-xl ${selectedIndex === index ? '' : 'bg-gradient-to-br from-blue-900 to-indigo-900'}`}>
-              {selectedIndex === index ? (
-                <img src={card.image_url} className="w-full h-full object-cover" alt="Selected" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/30 text-xs font-bold uppercase tracking-widest">
-                  ?
-                </div>
-              )}
+      {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
+      {selectedIndex === null && (
+        <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">運命の1枚を選べ...</h2>
+      )}
+      
+      <div className="relative flex justify-center items-center gap-6 w-full h-[400px]">
+        {fortuneCards.map((card, index) => {
+          const isSelected = selectedIndex === index;
+          const isAnySelected = selectedIndex !== null;
+
+          return (
+            <div 
+              key={index}
+              onClick={() => selectedIndex === null && setSelectedIndex(index)}
+              className={`
+                absolute transition-all duration-700 ease-out cursor-pointer
+                ${isSelected 
+                  ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
+                  : isAnySelected
+                    ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
+                    : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
+                }
+              `}
+            >
+              {/* カードの見た目 */}
+              <div className={`
+                w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
+                ${isSelected ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]' : 'border-white/20'}
+              `}>
+                {isSelected ? (
+                  <img src={card.image_url} className="w-full h-full object-cover" alt="Result" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center">
+                    <Skull className="text-white/20 w-8 h-8" />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* 結果発表後のボタン */}
       {selectedIndex !== null && (
-        <button 
-          onClick={() => setIsFortuneOpen(false)}
-          className="bg-white text-black px-8 py-3 rounded-full font-bold shadow-lg hover:bg-gray-200 transition-colors"
-        >
-          結果を閉じる
-        </button>
+        <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <button 
+            onClick={() => setIsFortuneOpen(false)}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+          >
+            コレクションに戻る
+          </button>
+        </div>
       )}
     </div>
   </div>
