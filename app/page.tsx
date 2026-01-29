@@ -522,48 +522,62 @@ return (
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    No.{num}
-                  </DialogTitle>
-                </DialogHeader>
-    
-                <div className="flex flex-col items-center gap-6 py-4">
-                  {/* カードプレビュー */}
-                  <div className={`w-52 transition-all duration-300 ${cardImage ? "shadow-[0_0_20px_rgba(59,130,246,0.5)]" : "shadow-sm opacity-50"}`}>
-                    <AspectRatio ratio={2.5 / 3.5} className="rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50">
-                      <img 
-                        src={cardImage || CARD_BACK_IMAGE} 
-                        alt="Preview" 
-                        className={`object-cover w-full h-full ${!cardImage && "grayscale opacity-20"}`} 
-                      />
-                    </AspectRatio>
-                  </div>
+              <DialogContent className="sm:max-w-[425px] bg-[#1a0a1f]/90 border-white/10 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,1)]">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-2 text-white/90">
+      <div className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono">No.{num}</div>
+    </DialogTitle>
+  </DialogHeader>
 
-                  <div className="flex items-center gap-2 w-full">
-                    <Button 
-                      variant={favorites[num] ? "default" : "outline"} 
-                      className={`flex-1 gap-2 ${favorites[num] ? "bg-purple-500 hover:bg-purple-600" : ""}`}
-                      onClick={() => toggleFavorite(num)}
-                    >
-                      <Heart className={favorites[num] ? "fill-current" : ""} />
-                      {favorites[num] ? "お気に入り解除" : "お気に入りに追加"}
-                    </Button>
-                  </div>
-                  {/* 削除セクション（セパレーター代わりの余白） */}
-                  <div className="pt-4 mt-2 border-t">
-                    <Button 
-  variant="outline" 
-  onClick={() => handleDelete(num)} // 作成した関数を呼ぶ
-  className="w-full h-11 text-muted-foreground hover:text-destructive hover:bg-red-50 gap-2"
->
-  <Trash2 size={10} />
-</Button>
-                  </div>
+  <div className="flex flex-col items-center gap-8 py-6">
+    {/* カードプレビュー：背景とのコントラストを強めるための光彩 */}
+    <div className={`
+      relative w-64 transition-all duration-500 transform hover:scale-105
+      ${cardImage 
+        ? "shadow-[0_0_40px_rgba(139,92,246,0.3)] ring-1 ring-white/20 rounded-2xl" 
+        : "shadow-sm opacity-50"
+      }
+    `}>
+      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border border-white/20 bg-black">
+        <img 
+          src={cardImage || CARD_BACK_IMAGE} 
+          alt="Preview" 
+          className={`object-cover w-full h-full ${!cardImage && "grayscale opacity-20"}`} 
+        />
+      </AspectRatio>
+      
+      {/* ホログラム風の光の筋（演出） */}
+      {cardImage && (
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 pointer-events-none" />
+      )}
+    </div>
 
-                </div>
-              </DialogContent>
+    {/* アクションエリア */}
+    <div className="flex flex-col gap-3 w-full px-4">
+      <Button 
+        variant={favorites[num] ? "default" : "outline"} 
+        className={`w-full h-12 gap-2 text-md font-bold transition-all duration-300 ${
+          favorites[num] 
+            ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none shadow-lg shadow-purple-500/20" 
+            : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+        }`}
+        onClick={() => toggleFavorite(num)}
+      >
+        <Heart className={favorites[num] ? "fill-current text-red-400" : "text-white/50"} />
+        {favorites[num] ? "お気に入り解除" : "お気に入りに追加"}
+      </Button>
+
+      <Button 
+        variant="ghost" 
+        onClick={() => handleDelete(num)}
+        className="w-full h-10 text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-colors gap-2 text-xs"
+      >
+        <Trash2 size={14} />
+        このカードを異世界転生させる
+      </Button>
+    </div>
+  </div>
+</DialogContent>
             </Dialog>
           );
         }
@@ -603,7 +617,7 @@ return (
       
       {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
       {selectedIndex === null && (
-        <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">運命の1枚を選べ...</h2>
+        <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">さいしょはスター...☆彡</h2>
       )}
       
       <div className="relative flex justify-center items-center gap-6 w-full h-[400px]">
@@ -648,12 +662,14 @@ return (
 
       {/* 結果発表後のボタン */}
       {selectedIndex !== null && (
+        <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <button 
             onClick={() => setIsFortuneOpen(false)}
             className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
           >
             Anywhare Tap
           </button>
+        </div>
       )}
     </div>
   </div>
