@@ -38,73 +38,6 @@ interface Card {
 // 型の名前を「CardData」などに変えると安全です
 
 export default function GaristagramUI() {  
-
-const requestPermission = async () => {
-  // --- iOS用の許可リクエスト ---
-  // DeviceMotionEvent.requestPermission が存在するか確認
-  if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-    try {
-      const permission = await (DeviceMotionEvent as any).requestPermission();
-      if (permission !== 'granted') {
-        alert("センサーへのアクセスが拒否されました。設定を確認してください。");
-        return; // 許可されなかったら終了
-      }
-    } catch (error) {
-      console.error("Permission error:", error);
-    }
-  }
-
-  // --- ここから下は既存のおみくじロジック ---
-  const heldCards = Object.entries(collection)
-    .filter(([_, url]) => url !== null)
-    .map(([slot, url]) => ({
-      slot_number: parseInt(slot),
-      image_url: url as string,
-      is_favorite: !!favorites[parseInt(slot)]
-    }));
-
-  if (heldCards.length < 3) {
-    alert(`カードが3枚以上必要です！`);
-    return;
-  }
-
-  const selected = heldCards.sort(() => Math.random() - 0.5).slice(0, 3);
-  setFortuneCards(selected);
-  setSelectedIndex(null);
-  setIsFortuneOpen(true);
-};
-const startShakeDetection = () => {
-  let lastX = 0, lastY = 0, lastZ = 0;
-  const threshold = 15; // 振りの強さのしきい値（お好みで調整）
-
-  window.addEventListener('devicemotion', (event) => {
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    const deltaX = Math.abs(acc.x! - lastX);
-    const deltaY = Math.abs(acc.y! - lastY);
-    const deltaZ = Math.abs(acc.z! - lastZ);
-
-    if (deltaX + deltaY + deltaZ > threshold) {
-      // ここに「振った時」の演出を入れる！
-      handleShake(); 
-    }
-
-    lastX = acc.x!;
-    lastY = acc.y!;
-    lastZ = acc.z!;
-  });
-};
-
-const handleShake = () => {
-  // 例：おみくじをまだ開いていないなら開始する
-  if (!isFortuneOpen) {
-    startFortune();
-    // 軽くスマホを振動させる（Androidのみ）
-    if (navigator.vibrate) navigator.vibrate(200);
-  }
-};
-
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
   const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
@@ -144,8 +77,6 @@ const handleShake = () => {
     newImages[index].slot = num;
     setSelectedImages(newImages);
   };
-
-  const [isShaking, setIsShaking] = useState(false);
 
   // ダイアログの開閉状態（初期値は false = 閉じている）
 const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -194,39 +125,6 @@ const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ), []);
-
-  useEffect(() => {
-  let shakeTimer: NodeJS.Timeout;
-
-  const handleMotion = (event: DeviceMotionEvent) => {
-    // おみくじ画面が開いていて、かつ、まだカードを選んでいない時だけ反応する
-    if (!isFortuneOpen || selectedIndex !== null) return;
-
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    // 揺れの強さを計算（ここの数字を上げると「激しく振らないと反応しない」ようになります）
-    const threshold = 15; 
-    const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-
-    if (movement > threshold) {
-      setIsShaking(true);
-      
-      // 振るのをやめて 0.3秒後に震えを止める
-      clearTimeout(shakeTimer);
-      shakeTimer = setTimeout(() => setIsShaking(false), 300);
-    }
-  };
-
-  if (isFortuneOpen) {
-    window.addEventListener('devicemotion', handleMotion);
-  }
-
-  return () => {
-    window.removeEventListener('devicemotion', handleMotion);
-    clearTimeout(shakeTimer);
-  };
-}, [isFortuneOpen, selectedIndex]);
 
   useEffect(() => {
   const fetchData = async () => {
@@ -738,13 +636,20 @@ return (
           return (
             <div 
               key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+              if (selectedIndex === null) setSelectedIndex(index);
+              }}
               className={`
-        absolute transition-all duration-700
+                absolute transition-all duration-700 ease-out
                 ${isSelected 
-                  ? 'z-50 scale-[2.5]' : 'relative scale-100'} // 選択：中央で巨大化
-                  ${isShaking && selectedIndex === null ? 'animate-shake' : ''}
-      `}
-    >
+                  ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
+                  : isAnySelected
+                    ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
+                    : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
+                }
+              `}
+            >
               {/* カードの見た目 */}
               <div className={`
                 w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
