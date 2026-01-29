@@ -124,6 +124,8 @@ const handleShake = () => {
     setSelectedImages(newImages);
   };
 
+  const [isShaking, setIsShaking] = useState(false);
+
   // ダイアログの開閉状態（初期値は false = 閉じている）
 const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -171,6 +173,39 @@ const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ), []);
+
+  useEffect(() => {
+  let shakeTimer: NodeJS.Timeout;
+
+  const handleMotion = (event: DeviceMotionEvent) => {
+    // おみくじ画面が開いていて、かつ、まだカードを選んでいない時だけ反応する
+    if (!isFortuneOpen || selectedIndex !== null) return;
+
+    const acc = event.accelerationIncludingGravity;
+    if (!acc) return;
+
+    // 揺れの強さを計算（ここの数字を上げると「激しく振らないと反応しない」ようになります）
+    const threshold = 15; 
+    const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+
+    if (movement > threshold) {
+      setIsShaking(true);
+      
+      // 振るのをやめて 0.3秒後に震えを止める
+      clearTimeout(shakeTimer);
+      shakeTimer = setTimeout(() => setIsShaking(false), 300);
+    }
+  };
+
+  if (isFortuneOpen) {
+    window.addEventListener('devicemotion', handleMotion);
+  }
+
+  return () => {
+    window.removeEventListener('devicemotion', handleMotion);
+    clearTimeout(shakeTimer);
+  };
+}, [isFortuneOpen, selectedIndex]);
 
   useEffect(() => {
   const fetchData = async () => {
@@ -689,13 +724,10 @@ return (
               className={`
                 absolute transition-all duration-700 ease-out
                 ${isSelected 
-                  ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
-                  : isAnySelected
-                    ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
-                    : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
-                }
-              `}
-            >
+                  ? 'z-50 scale-[2.5]' : 'relative scale-100'} // 選択：中央で巨大化
+                  ${isShaking && selectedIndex === null ? 'animate-shake' : ''}
+      `}
+    >
               {/* カードの見た目 */}
               <div className={`
                 w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
