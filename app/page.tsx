@@ -530,7 +530,7 @@ return (
     </DialogTitle>
   </DialogHeader>
 
-  <div className="relative flex flex-col items-center gap-12">
+  <div className="relative flex flex-col items-center gap-12 bg-black/95 backdrop-blur-md p-4 overflow-hidden">
     {/* カードプレビュー：おみくじ風の巨大化＆光彩エフェクト */}
     <div className={`
       relative w-64 transition-all duration-700 ease-out
