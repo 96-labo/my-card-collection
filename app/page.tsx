@@ -526,7 +526,7 @@ return (
   {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
   <DialogHeader className="mb-4">
     <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase">
-      No.{num} Collection
+      No.{num}
     </DialogTitle>
   </DialogHeader>
 
@@ -539,7 +539,7 @@ return (
         : "opacity-50"
       }
     `}>
-      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-purple/40 backdrop-blur-md">
+      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/40 backdrop-blur-md">
         <img 
           src={cardImage || CARD_BACK_IMAGE} 
           alt="Preview" 
