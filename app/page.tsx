@@ -596,7 +596,9 @@ return (
 
 {/* おみくじモーダル */}
 {isFortuneOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden cursor-pointer"
+    onClick={() => setIsFortuneOpen(false)} // ← 背景のどこを押しても閉じる
+  >
     <div className="w-full h-full flex flex-col items-center justify-center">
       
       {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
