@@ -89,6 +89,15 @@ const [conflictingSlots, setConflictingSlots] = useState<number[]>([]);
   // セットで管理するイメージ
   const [favorites, setFavorites] = useState<Record<number, boolean>>({});
 
+  // フォーチュンで選ばれた3枚のカードを保存する箱
+const [fortuneCards, setFortuneCards] = useState<Card[]>([]);
+
+// フォーチュンの画面（モーダル）を開いているかどうかの旗
+const [isFortuneOpen, setIsFortuneOpen] = useState(false);
+
+// どのカードを選択したかを記録する（最初は null）
+const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
   // お気に入り切り替え関数
   const toggleFavorite = (num: number) => {
     setFavorites(prev => ({
@@ -232,6 +241,22 @@ const handleDelete = async (num: number) => {
   }
 };
 
+const startFortune = () => {
+  if (cards.length < 3) {
+    alert("カードが3枚以上必要です！");
+    return;
+  }
+
+  // 1. シャッフルして3枚選出
+  const selected = [...cards]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  setFortuneCards(selected);
+  setSelectedIndex(null); // 選択状態をリセット
+  setIsFortuneOpen(true); // モーダルを表示
+};
+
 return (
   <div className="p-1 md:p-1 bg-[#29082b] min-h-screen text-white">
     {/* 1. アカウント名バーのみを最上部に固定 (fixed) */}
@@ -250,6 +275,29 @@ return (
         <MoreHorizontal size={24} />
       </div>
     </header>
+
+    {isFortuneOpen && (
+  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div className="text-center">
+      <h2 className="text-white text-xl mb-8">運命の1枚を選んでください</h2>
+      <div className="flex gap-4">
+        {fortuneCards.map((card, index) => (
+          <div 
+            key={index}
+            onClick={() => setSelectedIndex(index)}
+            className="cursor-pointer"
+          >
+            {/* ここにカードの見た目。selectedIndex が null なら裏向き、
+                自分の index と一致したら表向きにするアニメーションを入れる */}
+          </div>
+        ))}
+      </div>
+      <button onClick={() => setIsFortuneOpen(false)} className="mt-8 text-gray-400">
+        閉じる
+      </button>
+      </div>
+    </div>
+)}
 
     {/* スクロールするエリアの開始（ヘッダー分だけ上に余白） */}
     <div className="pt-10"></div>
