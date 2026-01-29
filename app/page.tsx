@@ -307,7 +307,7 @@ return (
     <div className="px-1 pt-4 pb-2">
       <div className="flex items-center gap-8">
         <div className="relative w-[86px] h-[86px] p-[3px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-full shrink-0 flex items-center justify-center">
-          <div className="bg-black p-0.5 rounded-full">
+          <div className="bg-black p-0.5 rounded-full w-full h-full">
             <button>
             <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover" alt="Avatar"
             onClick={startFortune}/>
