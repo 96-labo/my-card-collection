@@ -39,19 +39,40 @@ interface Card {
 
 export default function GaristagramUI() {  
 
-  const requestPermission = async () => {
-  // iPhone(iOS)特有の許可申請
+const requestPermission = async () => {
+  // --- iOS用の許可リクエスト ---
+  // DeviceMotionEvent.requestPermission が存在するか確認
   if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-    const permission = await (DeviceMotionEvent as any).requestPermission();
-    if (permission === 'granted') {
-      startShakeDetection();
+    try {
+      const permission = await (DeviceMotionEvent as any).requestPermission();
+      if (permission !== 'granted') {
+        alert("センサーへのアクセスが拒否されました。設定を確認してください。");
+        return; // 許可されなかったら終了
+      }
+    } catch (error) {
+      console.error("Permission error:", error);
     }
-  } else {
-    // AndroidやPCなどはそのまま開始
-    startShakeDetection();
   }
-};
 
+  // --- ここから下は既存のおみくじロジック ---
+  const heldCards = Object.entries(collection)
+    .filter(([_, url]) => url !== null)
+    .map(([slot, url]) => ({
+      slot_number: parseInt(slot),
+      image_url: url as string,
+      is_favorite: !!favorites[parseInt(slot)]
+    }));
+
+  if (heldCards.length < 3) {
+    alert(`カードが3枚以上必要です！`);
+    return;
+  }
+
+  const selected = heldCards.sort(() => Math.random() - 0.5).slice(0, 3);
+  setFortuneCards(selected);
+  setSelectedIndex(null);
+  setIsFortuneOpen(true);
+};
 const startShakeDetection = () => {
   let lastX = 0, lastY = 0, lastZ = 0;
   const threshold = 15; // 振りの強さのしきい値（お好みで調整）
