@@ -242,6 +242,7 @@ const handleDelete = async (num: number) => {
 };
 
 const startFortune = () => {
+  console.log("現在のカード枚数:", cards.length);
   if (cards.length < 3) {
     alert("カードが3枚以上必要です！");
     return;
