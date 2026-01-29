@@ -522,23 +522,24 @@ return (
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-[425px] bg-[#1a0a1f]/90 border-white/10 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,1)]">
-  <DialogHeader>
-    <DialogTitle className="flex items-center gap-2 text-white/90">
-      <div className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono">No.{num}</div>
+              <DialogContent className="border-none bg-transparent shadow-none p-0 flex flex-col items-center justify-center max-w-[95vw]">
+  {/* タイトル部分はカードの主役感を邪魔しないように最小限に */}
+  <DialogHeader className="mb-4">
+    <DialogTitle className="text-white/60 font-mono text-center tracking-[0.2em] text-sm uppercase">
+      No.{num} Collection
     </DialogTitle>
   </DialogHeader>
 
-  <div className="flex flex-col items-center gap-8 py-6">
-    {/* カードプレビュー：背景とのコントラストを強めるための光彩 */}
+  <div className="relative flex flex-col items-center gap-12">
+    {/* カードプレビュー：おみくじ風の巨大化＆光彩エフェクト */}
     <div className={`
-      relative w-64 transition-all duration-500 transform hover:scale-105
+      relative w-64 transition-all duration-700 ease-out
       ${cardImage 
-        ? "shadow-[0_0_40px_rgba(139,92,246,0.3)] ring-1 ring-white/20 rounded-2xl" 
-        : "shadow-sm opacity-50"
+        ? "scale-110 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl" 
+        : "opacity-50"
       }
     `}>
-      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border border-white/20 bg-black">
+      <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/40 backdrop-blur-md">
         <img 
           src={cardImage || CARD_BACK_IMAGE} 
           alt="Preview" 
@@ -546,34 +547,40 @@ return (
         />
       </AspectRatio>
       
-      {/* ホログラム風の光の筋（演出） */}
+      {/* 選ばれた時のような後光エフェクト */}
       {cardImage && (
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 pointer-events-none" />
+        <div className="absolute -inset-4 bg-purple-500/20 blur-3xl -z-10 animate-pulse" />
       )}
     </div>
 
-    {/* アクションエリア */}
-    <div className="flex flex-col gap-3 w-full px-4">
+    {/* 操作ボタン：おみくじの下部ボタンのように配置 */}
+    <div className="flex flex-col gap-4 w-72 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <Button 
-        variant={favorites[num] ? "default" : "outline"} 
-        className={`w-full h-12 gap-2 text-md font-bold transition-all duration-300 ${
+        variant="ghost" 
+        className={`w-full h-14 rounded-full text-lg font-black tracking-widest transition-all duration-300 ${
           favorites[num] 
-            ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none shadow-lg shadow-purple-500/20" 
-            : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+            ? "bg-gradient-to-r from-red-500 to-purple-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]" 
+            : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
         }`}
         onClick={() => toggleFavorite(num)}
       >
-        <Heart className={favorites[num] ? "fill-current text-red-400" : "text-white/50"} />
-        {favorites[num] ? "お気に入り解除" : "お気に入りに追加"}
+        <Heart className={`mr-2 ${favorites[num] ? "fill-current" : ""}`} />
+        {favorites[num] ? "FAVORITED" : "ADD FAVORITE"}
       </Button>
 
+      {/* 閉じるヒント */}
+      <p className="text-center text-white/30 text-xs tracking-tighter animate-pulse">
+        TAP ANYWHERE TO BACK
+      </p>
+
+      {/* 削除ボタンは誤操作防止のため、さらに下に小さく配置 */}
       <Button 
         variant="ghost" 
         onClick={() => handleDelete(num)}
-        className="w-full h-10 text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-colors gap-2 text-xs"
+        className="mt-4 text-white/10 hover:text-red-500 hover:bg-transparent transition-colors text-[10px]"
       >
-        <Trash2 size={14} />
-        このカードを異世界転生させる
+        <Trash2 size={12} className="mr-1" />
+        DELETE FROM COLLECTION
       </Button>
     </div>
   </div>
