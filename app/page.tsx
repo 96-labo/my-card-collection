@@ -614,7 +614,10 @@ return (
           return (
             <div 
               key={index}
-              onClick={() => selectedIndex === null && setSelectedIndex(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+              if (selectedIndex === null) setSelectedIndex(index);
+              }}
               className={`
                 absolute transition-all duration-700 ease-out cursor-pointer
                 ${isSelected 
