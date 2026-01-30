@@ -340,7 +340,7 @@ return (
         <MoreHorizontal size={24} />
       </div>
 
-      <button 
+      <button type="button"
   onClick={() => {
     enableSensor(); // ここでセンサーを叩き起こす！
     // 最初のクリックでおみくじの準備だけしておく
