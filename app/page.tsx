@@ -347,7 +347,7 @@ return (
   }}
   className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
 >
-  <img src="..." className="w-20 h-20" />
+  <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20" />
 </button>
 
 {/* パワーゲージ（振っている間だけ見える） */}
