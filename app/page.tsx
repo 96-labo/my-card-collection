@@ -340,15 +340,14 @@ return (
         <MoreHorizontal size={24} />
       </div>
 
-      <button type="button"
+      <button 
   onClick={() => {
     enableSensor(); // ここでセンサーを叩き起こす！
     // 最初のクリックでおみくじの準備だけしておく
   }}
   className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
 >
-  <img src="https://scjdlixiqqtblstemhel.supabase.co/storage/v1/object/public/images/icon.png" className="w-20 h-20 rounded-full object-cover border-2 border-purple-500/30 shadow-lg" 
-    alt="Start Sensor" />
+  <img src="..." className="w-20 h-20" />
 </button>
 
 {/* パワーゲージ（振っている間だけ見える） */}
