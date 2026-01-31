@@ -340,7 +340,7 @@ return (
         <MoreHorizontal size={24} />
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-2">
       <button 
   onClick={() => {
     enableSensor(); // ここでセンサーを叩き起こす！
