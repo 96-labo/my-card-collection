@@ -217,7 +217,7 @@ export default function GaristagramUI() {
     if (!isSensorActive || isFortuneOpen) return;
 
     const handleMotion = (event: DeviceMotionEvent) => {
-      const acc = event.accelerationIncludingGravity;
+      const acc = event.acceleration;
       if (!acc) return;
 
       const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
@@ -242,6 +242,16 @@ export default function GaristagramUI() {
     window.addEventListener('devicemotion', handleMotion);
     return () => window.removeEventListener('devicemotion', handleMotion);
   }, [isSensorActive, isFortuneOpen, heldCards]); // 依存配列に heldCards を追加して最新状態を反映
+
+  useEffect(() => {
+  // パワーを自動で減らすタイマー
+  const decayTimer = setInterval(() => {
+    setShakePower(prev => Math.max(0, prev - 1)); // 0.1秒ごとに 1% ずつ減らす
+  }, 100);
+
+    return () => clearInterval(decayTimer);
+  }, []);
+
   // 1. 実際に保存を実行する関数（Supabase連携）
   const executeArchive = async () => {
     try {
@@ -376,16 +386,6 @@ export default function GaristagramUI() {
           </button>
             <MoreHorizontal size={24} />
         </div>
-
-        {/* パワーゲージ（振っている間だけ見える） */}
-        {shakePower > 0 && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 w-48 h-1 bg-white/20 rounded-full">
-            <div 
-              className="h-full bg-purple-500 shadow-[0_0_10px_purple]" 
-              style={{ width: `${shakePower}%` }} 
-            />
-          </div>
-        )}
       </header>
 
       {/* スクロールするエリアの開始（ヘッダー分だけ上に余白） */}
