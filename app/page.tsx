@@ -181,38 +181,67 @@ export default function GaristagramUI() {
   };
 
 
+// --- 1. アプリ起動時にデータを読み込む ---
   useEffect(() => {
+    const fetchCollection = async () => {
+      const { data, error } = await supabase
+        .from('card_collection')
+        .select('*')
+        .order('slot_number', { ascending: true });
+
+      if (error) {
+        console.error('データ取得失敗:', error);
+        return;
+      }
+
+      if (data) {
+        const newCollection: { [key: number]: string | null } = {};
+        const newFavorites: Record<number, boolean> = {};
+
+        data.forEach((item: any) => {
+          newCollection[item.slot_number] = item.image_url;
+          newFavorites[item.slot_number] = item.is_favorite;
+        });
+
+        setCollection(newCollection);
+        setFavorites(newFavorites);
+      }
+    };
+
+    fetchCollection();
+  }, [supabase]); // データの読み込みはこれだけで完結
+
+  // --- 2. センサーの監視 (振り検知) ---
+  useEffect(() => {
+    // センサーが無効、またはおみくじ画面が開いている時は動かさない
     if (!isSensorActive || isFortuneOpen) return;
 
-      const handleMotion = (event: DeviceMotionEvent) => {
-        const acc = event.accelerationIncludingGravity;
-        if (!acc) return;
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
 
-        // 揺れの強さを計算
-        const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+      const movement = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
 
-        if (movement > 25) { // しきい値
-          setIsShaking(true); // 震えるアニメーションON
-          
-          setShakePower(prev => {
-            const next = prev + 5;
-            if (next >= 100) {
-              startFortune(); // 100%で起動！
-              return 0;
-            }
-            return next;
-          });
+      if (movement > 25) { // しきい値
+        setIsShaking(true);
+        
+        setShakePower(prev => {
+          const next = prev + 5;
+          if (next >= 100) {
+            startFortune(); // 100%で起動
+            return 0;
+          }
+          return next;
+        });
 
-          // 揺れが止まったらアニメーションを消す
-          const timer = setTimeout(() => setIsShaking(false), 200);
-          return () => clearTimeout(timer);
-        }
-      };
+        const timer = setTimeout(() => setIsShaking(false), 200);
+        return () => clearTimeout(timer);
+      }
+    };
 
     window.addEventListener('devicemotion', handleMotion);
     return () => window.removeEventListener('devicemotion', handleMotion);
-  }, [isSensorActive, isFortuneOpen, heldCards ]);
-
+  }, [isSensorActive, isFortuneOpen, heldCards]); // 依存配列に heldCards を追加して最新状態を反映
   // 1. 実際に保存を実行する関数（Supabase連携）
   const executeArchive = async () => {
     try {
@@ -700,6 +729,23 @@ export default function GaristagramUI() {
                 }
               `}
             >
+              <div className={`
+                w-28 h-40 rounded-2xl border-2 shadow-2xl overflow-hidden transition-all duration-500
+                ${selectedIndex !== null 
+                  ? 'border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)]' 
+                  : 'border-white/20 bg-gradient-to-br from-indigo-950 to-black'
+                }
+              `}>
+                {selectedIndex !== null ? (
+                  <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    {/* 裏面のデザイン：ドクロが怪しく光る */}
+                    <Skull className="text-white/10 w-12 h-12 animate-pulse" />
+                  </div>
+                )}
+              </div>
+
               {/* 開いた瞬間の光の輪 */}
               {selectedIndex !== null && (
                 <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-out fade-out duration-1000" />
