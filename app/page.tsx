@@ -347,7 +347,7 @@ return (
   }}
   className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
 >
-  <img src="..." className="w-20 h-20" />
+  <Bell size={24} className="flex items-center gap-5" />
 </button>
 
 {/* パワーゲージ（振っている間だけ見える） */}
