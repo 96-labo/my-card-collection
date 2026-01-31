@@ -683,16 +683,6 @@ export default function GaristagramUI() {
         >
           <div className="w-full h-full flex flex-col items-center justify-center">
             
-            {/* 演出タイトル */}
-            <div className="mb-12 text-center animate-in fade-in zoom-in duration-500">
-              <h2 className="text-white/40 text-sm font-mono tracking-[0.3em] uppercase mb-2">
-                Fortune Draw
-              </h2>
-              <p className="text-white text-2xl font-black italic">
-                {selectedIndex === null ? "TAP TO OPEN..." : "CONGRATULATIONS!"}
-              </p>
-            </div>
-            
             {/* 中央のカード */}
             <div 
               onClick={(e) => {
