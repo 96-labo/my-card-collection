@@ -335,11 +335,6 @@ return (
           </div>  
         </div>
       </div>
-      <div className="flex items-center gap-5">
-        <Bell size={24} />
-        <MoreHorizontal size={24} />
-      </div>
-
       <div className="flex items-center">
       <button 
   onClick={() => {
