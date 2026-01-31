@@ -172,7 +172,7 @@ export default function GaristagramUI() {
 
     // 2. Stateにセット
     setResultCard(selected);
-    setSelectedIndex(null); // まだ「裏返し」の状態
+    setSelectedIndex(0); // まだ「裏返し」の状態
     setIsFortuneOpen(true);
     setShakePower(0);
 
@@ -704,7 +704,7 @@ export default function GaristagramUI() {
         </div>
       )}
 
-      {/* おみくじモーダル */}
+      {/* おみくじモーダル（即時表示版） */}
       {isFortuneOpen && resultCard && (
         <div 
           onClick={() => setIsFortuneOpen(false)}
@@ -712,62 +712,33 @@ export default function GaristagramUI() {
         >
           <div className="w-full h-full flex flex-col items-center justify-center">
             
-            {/* 中央のカード */}
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (selectedIndex === null) {
-                  setSelectedIndex(0); // 「開いた」フラグとして使用
-                  if (navigator.vibrate) navigator.vibrate(50);
-                }
-              }}
-              className={`
-                relative transition-all duration-1000 ease-out cursor-pointer
-                ${selectedIndex !== null 
-                  ? 'scale-[2.8] rotate-[360deg] z-50' 
-                  : 'scale-125 hover:scale-135 active:scale-110'
-                }
-              `}
-            >
-              <div className={`
-                w-28 h-40 rounded-2xl border-2 shadow-2xl overflow-hidden transition-all duration-500
-                ${selectedIndex !== null 
-                  ? 'border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)]' 
-                  : 'border-white/20 bg-gradient-to-br from-indigo-950 to-black'
-                }
-              `}>
-                {selectedIndex !== null ? (
-                  <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    {/* 裏面のデザイン：ドクロが怪しく光る */}
-                    <Skull className="text-white/10 w-12 h-12 animate-pulse" />
-                  </div>
-                )}
+            {/* 演出タイトル */}
+            <div className="mb-12 text-center animate-in fade-in zoom-in duration-500">
+              <h2 className="text-white text-2xl font-black italic">YOU GOT!</h2>
+            </div>
+            
+            {/* カード：最初から表面で巨大化して登場 */}
+            <div className="relative scale-[2.8] z-50 transition-all duration-700">
+              <div className="w-28 h-40 rounded-2xl border-2 border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)] overflow-hidden">
+                <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
               </div>
-
-              {/* 開いた瞬間の光の輪 */}
-              {selectedIndex !== null && (
-                <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-out fade-out duration-1000" />
-              )}
+              {/* 開いた瞬間のエフェクト */}
+              <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-pulse" />
             </div>
 
-            {/* 結果発表後のテキストとボタン */}
-            {selectedIndex !== null && (
-              <div className="mt-28 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-                <div className="text-center">
-                  <span className="text-yellow-400 text-xs font-bold tracking-widest uppercase">No.{resultCard.slot_number}</span>
-                  <h3 className="text-white text-xl font-bold mt-1 tracking-tight">Got a Legend!</h3>
-                </div>
-                
-                <button 
-                  onClick={() => setIsFortuneOpen(false)}
-                  className="bg-white text-black px-12 py-3 rounded-full font-black text-sm uppercase tracking-tighter shadow-white/10 shadow-2xl active:scale-95 transition-transform"
-                >
-                  Close Collection
-                </button>
+            {/* 下部のテキストとボタン */}
+            <div className="mt-28 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              <div className="text-center">
+                <span className="text-yellow-400 text-xs font-bold tracking-widest uppercase">No.{resultCard.slot_number}</span>
               </div>
-            )}
+              
+              <button 
+                onClick={() => setIsFortuneOpen(false)}
+                className="bg-white text-black px-12 py-3 rounded-full font-black text-sm uppercase tracking-tighter active:scale-95 transition-transform"
+              >
+                Back to Collection
+              </button>
+            </div>
           </div>
         </div>
       )}
