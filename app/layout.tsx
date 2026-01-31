@@ -26,6 +26,7 @@ export const metadata: Metadata = {
   // アイコンのメタタグを直接指定
   icons: {
     apple: '/images/apple-touch-icon.png',
+    shortcut: '/images/apple-touch-icon.png',
   },  
 };
 
