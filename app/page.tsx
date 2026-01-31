@@ -34,24 +34,12 @@ interface Card {
   is_favorite: boolean;
 }
 
-// もし既存のコンポーネント名とぶつかってエラーが出るなら、
-// 型の名前を「CardData」などに変えると安全です
-
 export default function GaristagramUI() { 
   // 振りのパワー（0〜100）
   const [shakePower, setShakePower] = useState(0);
   // センサーが有効になったかどうか（iOS対策）
   const [isSensorActive, setIsSensorActive] = useState(false);
-
-  // 300枚のダミーデータ（実際は別ファイルから読み込むのがベスト）
-const CARDS = Array.from({ length: 300 }, (_, i) => ({
-  id: i + 1,
-  name: `トレカ No.${i + 1}`,
-  image: `/images/cards/card-${i + 1}.jpg`
-}));
-
   // 今まさに振っている最中かどうか（アニメーション用）
-  const [selectedCard, setSelectedCard] = useState<null | typeof CARDS[0]>(null);
   const [isShaking, setIsShaking] = useState(false);
   const enableSensor = async () => {
     // iOS用の許可申請
@@ -83,6 +71,8 @@ const CARDS = Array.from({ length: 300 }, (_, i) => ({
   const removeImage = (indexToRemove: number) => {
     setSelectedImages((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
+
+  const [resultCard, setResultCard] = useState<Card | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -311,17 +301,24 @@ const CARDS = Array.from({ length: 300 }, (_, i) => ({
   }, [collection, favorites]);
 
   const startFortune = () => {
-    setIsShaking(true); // 画面をガタガタさせる演出開始
+    if (heldCards.length === 0) {
+      alert(`カードが1枚もありません！まずは登録しましょう。`);
+      setShakePower(0);
+      return;
+    }
 
-    // 1秒後にカードを決定（「溜め」の時間を作ると期待感アップ！）
-    setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * CARDS.length);
-      setSelectedCard(CARDS[randomIndex]);
-      setIsShaking(false);
-      
-      // iPhoneならここで軽くバイブを鳴らす（PWAの隠し味）
-      if (navigator.vibrate) navigator.vibrate(200);
-    }, 1000);
+    // 1. 全所持カード(heldCards)から完全にランダムで1枚選ぶ
+    const randomIndex = Math.floor(Math.random() * heldCards.length);
+    const selected = heldCards[randomIndex];
+
+    // 2. Stateにセット
+    setResultCard(selected);
+    setSelectedIndex(null); // まだ「裏返し」の状態
+    setIsFortuneOpen(true);
+    setShakePower(0);
+
+    // 3. 振動（iPhoneは設定次第ですが一応）
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   };
 
   return (
@@ -677,30 +674,71 @@ const CARDS = Array.from({ length: 300 }, (_, i) => ({
       )}
 
       {/* おみくじモーダル */}
-      {/* 振っている最中のゲージ表示 */}
-    <div className="p-4">
-      <p>パワー: {shakePower}%</p>
-      <div className="w-full h-4 bg-gray-200 rounded-full">
+      {isFortuneOpen && (
         <div 
-          className="h-full bg-blue-500 transition-all duration-100" 
-          style={{ width: `${shakePower}%` }}
-        />
-      </div>
-    </div>
-      {selectedCard && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-in fade-in duration-300">
-        <div className="bg-white p-6 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300">
-          <h2 className="text-xl font-bold mb-4">{selectedCard.name}</h2>
-          <img src={selectedCard.image} alt="card" className="w-64 h-auto rounded-lg" />
-          <button 
-            onClick={() => setSelectedCard(null)}
-            className="mt-6 w-full py-2 bg-gray-800 text-white rounded-lg"
-          >
-            もう一回！
-          </button>
+          onClick={() => setIsFortuneOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
+
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
+            {selectedIndex === null && (
+              <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">さいしょはスター...☆彡</h2>
+            )}
+            
+            <div className="relative flex justify-center items-center gap-6 w-full h-[400px]">
+              {fortuneCards.map((card, index) => {
+                const isSelected = selectedIndex === index;
+                const isAnySelected = selectedIndex !== null;
+
+                return (
+                  <div 
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (selectedIndex === null) setSelectedIndex(index);
+                    }}
+                    className={`
+                      absolute transition-all duration-700 ease-out
+                      ${isSelected 
+                        ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
+                        : isAnySelected
+                          ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
+                          : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
+                      }
+                    `}
+                  >
+                    {/* カードの見た目 */}
+                    <div className={`
+                      w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
+                      ${isSelected ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]' : 'border-white/20'}
+                    `}>
+                      {isSelected ? (
+                        <img src={card.image_url} className="w-full h-full object-cover" alt="Result" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center">
+                          <Skull className="text-white/20 w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 結果発表後のボタン */}
+            {selectedIndex !== null && (
+              <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <button 
+                  onClick={() => setIsFortuneOpen(false)}
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+                >
+                  Anywhare Tap
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
+      )}
 
       {/* 振りパワーゲージ：パワーがある時だけ表示 */}
       {!isFortuneOpen && shakePower > 0 && (
