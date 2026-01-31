@@ -340,6 +340,7 @@ return (
         <MoreHorizontal size={24} />
       </div>
 
+      <div className="flex items-center gap-5">
       <button 
   onClick={() => {
     enableSensor(); // ここでセンサーを叩き起こす！
@@ -347,9 +348,10 @@ return (
   }}
   className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
 >
-  <Bell size={24} className="flex items-center gap-5" />
-  <MoreHorizontal size={24} className="flex items-center gap-5" />
+  <Bell size={24} />
+  <MoreHorizontal size={24} />
 </button>
+</div>
 
 {/* パワーゲージ（振っている間だけ見える） */}
 {shakePower > 0 && (
