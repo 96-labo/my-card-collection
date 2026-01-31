@@ -700,23 +700,6 @@ export default function GaristagramUI() {
                 }
               `}
             >
-              <div className={`
-                w-28 h-40 rounded-2xl border-2 shadow-2xl overflow-hidden transition-all duration-500
-                ${selectedIndex !== null 
-                  ? 'border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)]' 
-                  : 'border-white/20 bg-gradient-to-br from-indigo-950 to-black'
-                }
-              `}>
-                {selectedIndex !== null ? (
-                  <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    {/* 裏面のデザイン：ドクロが怪しく光る */}
-                    <Skull className="text-white/10 w-12 h-12 animate-pulse" />
-                  </div>
-                )}
-              </div>
-
               {/* 開いた瞬間の光の輪 */}
               {selectedIndex !== null && (
                 <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-out fade-out duration-1000" />
