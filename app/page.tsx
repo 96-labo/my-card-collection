@@ -349,8 +349,8 @@ return (
   className={`p-4 rounded-full transition-all ${isShaking ? 'animate-shake' : ''}`}
 >
   <Bell size={24} />
+  </button>
   <MoreHorizontal size={24} />
-</button>
 </div>
 
 {/* パワーゲージ（振っている間だけ見える） */}
