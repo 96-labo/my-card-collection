@@ -631,8 +631,8 @@ export default function GaristagramUI() {
                       </DialogHeader>
 
                       <div className="relative flex flex-col items-center gap-12">
-                        <div className="relative w-64 scale-110 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl">
-                          <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-purple-400 border-2 border-white/20 bg-black/95 backdrop-blur-md">
+                        <div className="relative w-64 scale-110 bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-70 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl">
+                          <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
                             <img 
                               src={cardImage || CARD_BACK_IMAGE} 
                               alt="Preview" 
