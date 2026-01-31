@@ -148,6 +148,39 @@ export default function GaristagramUI() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   ), []);
 
+    const heldCards: Card[] = useMemo(() => {
+    if (!collection || Object.keys(collection).length === 0) return [];
+    return Object.entries(collection || {})
+      .filter(([_, url]) => url !== null)
+      .map(([slot, url]) => ({
+        slot_number: parseInt(slot),
+        image_url: url as string,
+        is_favorite: !!favorites[parseInt(slot)] // favoritesからお気に入り状態を取得
+      }));
+  }, [collection, favorites]);
+
+  const startFortune = () => {
+    if (heldCards.length === 0) {
+      alert(`カードが1枚もありません！まずは登録しましょう。`);
+      setShakePower(0);
+      return;
+    }
+
+    // 1. 全所持カード(heldCards)から完全にランダムで1枚選ぶ
+    const randomIndex = Math.floor(Math.random() * heldCards.length);
+    const selected = heldCards[randomIndex];
+
+    // 2. Stateにセット
+    setResultCard(selected);
+    setSelectedIndex(null); // まだ「裏返し」の状態
+    setIsFortuneOpen(true);
+    setShakePower(0);
+
+    // 3. 振動（iPhoneは設定次第ですが一応）
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  };
+
+
   useEffect(() => {
     if (!isSensorActive || isFortuneOpen) return;
 
@@ -178,7 +211,7 @@ export default function GaristagramUI() {
 
     window.addEventListener('devicemotion', handleMotion);
     return () => window.removeEventListener('devicemotion', handleMotion);
-  }, [isSensorActive, isFortuneOpen]);
+  }, [isSensorActive, isFortuneOpen, heldCards ]);
 
   // 1. 実際に保存を実行する関数（Supabase連携）
   const executeArchive = async () => {
@@ -289,37 +322,6 @@ export default function GaristagramUI() {
     }
   };
 
-  const heldCards: Card[] = useMemo(() => {
-    if (!collection || Object.keys(collection).length === 0) return [];
-    return Object.entries(collection || {})
-      .filter(([_, url]) => url !== null)
-      .map(([slot, url]) => ({
-        slot_number: parseInt(slot),
-        image_url: url as string,
-        is_favorite: !!favorites[parseInt(slot)] // favoritesからお気に入り状態を取得
-      }));
-  }, [collection, favorites]);
-
-  const startFortune = () => {
-    if (heldCards.length === 0) {
-      alert(`カードが1枚もありません！まずは登録しましょう。`);
-      setShakePower(0);
-      return;
-    }
-
-    // 1. 全所持カード(heldCards)から完全にランダムで1枚選ぶ
-    const randomIndex = Math.floor(Math.random() * heldCards.length);
-    const selected = heldCards[randomIndex];
-
-    // 2. Stateにセット
-    setResultCard(selected);
-    setSelectedIndex(null); // まだ「裏返し」の状態
-    setIsFortuneOpen(true);
-    setShakePower(0);
-
-    // 3. 振動（iPhoneは設定次第ですが一応）
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-  };
 
   return (
     <div className="p-1 md:p-1 bg-[#29082b] min-h-screen text-white">
@@ -674,65 +676,76 @@ export default function GaristagramUI() {
       )}
 
       {/* おみくじモーダル */}
-      {isFortuneOpen && (
+      {isFortuneOpen && resultCard && (
         <div 
           onClick={() => setIsFortuneOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 overflow-hidden">
-
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 overflow-hidden"
+        >
           <div className="w-full h-full flex flex-col items-center justify-center">
-            {/* タイトル：カード選択後は非表示にしてカードを主役にする */}
-            {selectedIndex === null && (
-              <h2 className="text-white text-2xl font-bold mb-12 animate-pulse">さいしょはスター...☆彡</h2>
-            )}
             
-            <div className="relative flex justify-center items-center gap-6 w-full h-[400px]">
-              {fortuneCards.map((card, index) => {
-                const isSelected = selectedIndex === index;
-                const isAnySelected = selectedIndex !== null;
-
-                return (
-                  <div 
-                    key={index}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selectedIndex === null) setSelectedIndex(index);
-                    }}
-                    className={`
-                      absolute transition-all duration-700 ease-out
-                      ${isSelected 
-                        ? 'z-50 scale-[2.5] rotate-0 translate-x-0 translate-y-0' // 選択：中央で巨大化
-                        : isAnySelected
-                          ? 'opacity-0 scale-50 pointer-events-none' // 他：消える
-                          : `relative scale-100 hover:-translate-y-4` // 未選択：並んで待機
-                      }
-                    `}
-                  >
-                    {/* カードの見た目 */}
-                    <div className={`
-                      w-24 h-34 rounded-xl border-2 shadow-2xl overflow-hidden transition-all duration-500
-                      ${isSelected ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)]' : 'border-white/20'}
-                    `}>
-                      {isSelected ? (
-                        <img src={card.image_url} className="w-full h-full object-cover" alt="Result" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-black flex items-center justify-center">
-                          <Skull className="text-white/20 w-8 h-8" />
-                        </div>
-                      )}
-                    </div>
+            {/* 演出タイトル */}
+            <div className="mb-12 text-center animate-in fade-in zoom-in duration-500">
+              <h2 className="text-white/40 text-sm font-mono tracking-[0.3em] uppercase mb-2">
+                Fortune Draw
+              </h2>
+              <p className="text-white text-2xl font-black italic">
+                {selectedIndex === null ? "TAP TO OPEN..." : "CONGRATULATIONS!"}
+              </p>
+            </div>
+            
+            {/* 中央のカード */}
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (selectedIndex === null) {
+                  setSelectedIndex(0); // 「開いた」フラグとして使用
+                  if (navigator.vibrate) navigator.vibrate(50);
+                }
+              }}
+              className={`
+                relative transition-all duration-1000 ease-out cursor-pointer
+                ${selectedIndex !== null 
+                  ? 'scale-[2.8] rotate-[360deg] z-50' 
+                  : 'scale-125 hover:scale-135 active:scale-110'
+                }
+              `}
+            >
+              <div className={`
+                w-28 h-40 rounded-2xl border-2 shadow-2xl overflow-hidden transition-all duration-500
+                ${selectedIndex !== null 
+                  ? 'border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)]' 
+                  : 'border-white/20 bg-gradient-to-br from-indigo-950 to-black'
+                }
+              `}>
+                {selectedIndex !== null ? (
+                  <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    {/* 裏面のデザイン：ドクロが怪しく光る */}
+                    <Skull className="text-white/10 w-12 h-12 animate-pulse" />
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              {/* 開いた瞬間の光の輪 */}
+              {selectedIndex !== null && (
+                <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-out fade-out duration-1000" />
+              )}
             </div>
 
-            {/* 結果発表後のボタン */}
+            {/* 結果発表後のテキストとボタン */}
             {selectedIndex !== null && (
-              <div className="mt-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <div className="mt-28 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                <div className="text-center">
+                  <span className="text-yellow-400 text-xs font-bold tracking-widest uppercase">No.{resultCard.slot_number}</span>
+                  <h3 className="text-white text-xl font-bold mt-1 tracking-tight">Got a Legend!</h3>
+                </div>
+                
                 <button 
                   onClick={() => setIsFortuneOpen(false)}
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-10 py-3 rounded-full font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+                  className="bg-white text-black px-12 py-3 rounded-full font-black text-sm uppercase tracking-tighter shadow-white/10 shadow-2xl active:scale-95 transition-transform"
                 >
-                  Anywhare Tap
+                  Close Collection
                 </button>
               </div>
             )}
