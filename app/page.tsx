@@ -593,6 +593,7 @@ export default function GaristagramUI() {
                     <AspectRatio ratio={2.5 / 3.5} className="relative group">
                       <img
                         src={cardImage}
+                        loading="lazy"
                         alt={`Card ${num}`}
                         className="object-cover w-full h-full animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10"
                       />
