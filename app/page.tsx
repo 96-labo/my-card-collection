@@ -186,7 +186,7 @@ export default function GaristagramUI() {
     const fetchCollection = async () => {
       const { data, error } = await supabase
         .from('card_collection')
-        .select('*')
+        .select('slot_number, image_url, is_favorite')
         .order('slot_number', { ascending: true });
 
       if (error) {
@@ -594,6 +594,7 @@ export default function GaristagramUI() {
                       <img
                         src={cardImage}
                         loading="lazy"
+                        decoding="async"
                         alt={`Card ${num}`}
                         className="object-cover w-full h-full animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10"
                       />
