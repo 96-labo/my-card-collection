@@ -729,34 +729,14 @@ export default function GaristagramUI() {
               <h2 className="text-white text-2xl font-black italic">YOU GOT!</h2>
             </div>
             
-            {/* カードコンテナ：3Dの奥行きを設定 */}
-<div 
-  className="relative z-50 transition-all duration-700"
-  style={{ perspective: "1000px" }} // 奥行きの深さを定義
->
-  <div 
-    className="relative w-28 aspect-[59/86] rounded-xl border-2 border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)] overflow-hidden"
-    style={{ 
-      transform: "scale(2.8) rotateX(10deg) rotateY(-5deg) rotateZ(2deg)", // 絶妙な傾きで立体感を出す
-      transformStyle: "preserve-3d" 
-    }}
-  >
-    <img 
-      src={resultCard.image_url} 
-      className="w-full h-full object-cover" 
-      alt="Result" 
-    />
-    
-    {/* カード表面の反射（ハイライト）エフェクト */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none" />
-  </div>
-
-  {/* 背後の発光エフェクト（奥行き感を強調） */}
-  <div 
-    className="absolute -inset-10 bg-purple-600/30 blur-[60px] -z-10 animate-pulse"
-    style={{ transform: "translateZ(-50px)" }} // カードより奥に配置
-  />
-</div>
+            {/* カード：最初から表面で巨大化して登場 */}
+            <div className="relative scale-[2.8] z-50 transition-all duration-700">
+              <div className="w-28 aspect-[59/86] rounded-2xl border-2 border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)] overflow-hidden">
+                <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
+              </div>
+              {/* 開いた瞬間のエフェクト */}
+              <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-pulse" />
+            </div>
 
             {/* 下部のテキストとボタン */}
             <div className="mt-28 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
