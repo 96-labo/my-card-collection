@@ -274,7 +274,7 @@ export default function GaristagramUI() {
         // a. 画像をストレージにアップロード
         const { error: storageError } = await supabase.storage
           .from('cards')
-          .upload(fileName, img.file);
+          .upload(fileName, compressedFile);
 
         if (storageError) throw storageError;
 
