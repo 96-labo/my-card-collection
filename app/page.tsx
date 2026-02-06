@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { createBrowserClient } from '@supabase/ssr';
 import { motion, useMotionValue, useTransform } from "framer-motion";
+import imageCompression from 'browser-image-compression';
 import {
   Dialog,
   DialogContent,
@@ -256,8 +257,21 @@ export default function GaristagramUI() {
   const executeArchive = async () => {
     try {
       const uploadPromises = selectedImages.map(async (img) => {
+        // --- WebP変換オプション ---
+        const options = {
+          maxSizeMB: 0.5,          // 0.5MB以下に抑える（画質を保ちつつ劇的に軽くなる）
+          maxWidthOrHeight: 1200, // 長辺を1200pxに制限（スマホ表示なら十分すぎる高画質）
+          useWebWorker: true,
+          fileType: 'image/webp'  // ここで WebP を指定！
+        };
+
+        // 実際に圧縮・変換
+        const compressedFile = await imageCompression(img.file, options);
+        
+        // 保存するファイル名を .webp に変更
+        const fileName = `${img.slot}_${Date.now()}.webp`;
+
         // a. 画像をストレージにアップロード
-        const fileName = `${img.slot}_${Date.now()}.png`;
         const { error: storageError } = await supabase.storage
           .from('cards')
           .upload(fileName, img.file);
