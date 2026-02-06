@@ -604,7 +604,7 @@ export default function GaristagramUI() {
               <Dialog key={num}>
                 <DialogTrigger asChild>
                   <Card className={`p-0 rounded-none animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10 overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
-                    <AspectRatio ratio={2.5 / 3.5} className="relative group">
+                    <AspectRatio ratio={59 / 86} className="relative group">
                       <img
                         src={cardImage}
                         loading="lazy"
@@ -648,7 +648,7 @@ export default function GaristagramUI() {
 
                       <div className="relative flex flex-col items-center gap-12">
                         <div className="relative w-64 scale-110 bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-70 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl">
-                          <AspectRatio ratio={2.5 / 3.5} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
+                          <AspectRatio ratio={59 / 86} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
                             <img 
                               src={cardImage || CARD_BACK_IMAGE} 
                               alt="Preview" 
@@ -693,7 +693,7 @@ export default function GaristagramUI() {
           // 2. 未所持の場合の表示（ただのCard、Dialogなし）
           return (
             <Card key={num} className="p-0 rounded-none overflow-hidden border-none shadow-none cursor-default">
-              <AspectRatio ratio={2.5 / 3.5} className="relative">
+              <AspectRatio ratio={59 / 86} className="relative">
                 <img
                   src={CARD_BACK_IMAGE}
                   alt="Empty Slot"
@@ -729,14 +729,34 @@ export default function GaristagramUI() {
               <h2 className="text-white text-2xl font-black italic">YOU GOT!</h2>
             </div>
             
-            {/* カード：最初から表面で巨大化して登場 */}
-            <div className="relative scale-[2.8] z-50 transition-all duration-700">
-              <div className="w-28 h-40 rounded-2xl border-2 border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)] overflow-hidden">
-                <img src={resultCard.image_url} className="w-full h-full object-cover" alt="Result" />
-              </div>
-              {/* 開いた瞬間のエフェクト */}
-              <div className="absolute -inset-10 bg-white/20 blur-3xl -z-10 animate-pulse" />
-            </div>
+            {/* カードコンテナ：3Dの奥行きを設定 */}
+<div 
+  className="relative z-50 transition-all duration-700"
+  style={{ perspective: "1000px" }} // 奥行きの深さを定義
+>
+  <div 
+    className="relative w-28 aspect-[59/86] rounded-xl border-2 border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.5)] overflow-hidden"
+    style={{ 
+      transform: "scale(2.8) rotateX(10deg) rotateY(-5deg) rotateZ(2deg)", // 絶妙な傾きで立体感を出す
+      transformStyle: "preserve-3d" 
+    }}
+  >
+    <img 
+      src={resultCard.image_url} 
+      className="w-full h-full object-cover" 
+      alt="Result" 
+    />
+    
+    {/* カード表面の反射（ハイライト）エフェクト */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none" />
+  </div>
+
+  {/* 背後の発光エフェクト（奥行き感を強調） */}
+  <div 
+    className="absolute -inset-10 bg-purple-600/30 blur-[60px] -z-10 animate-pulse"
+    style={{ transform: "translateZ(-50px)" }} // カードより奥に配置
+  />
+</div>
 
             {/* 下部のテキストとボタン */}
             <div className="mt-28 flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
