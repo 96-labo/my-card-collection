@@ -647,7 +647,7 @@ export default function GaristagramUI() {
                   <Card className={`p-0 bg-[#29082b] rounded-none animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10 overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
                     <AspectRatio ratio={59 / 86} className="relative group">
                       <img
-                        src={cardImage.full}
+                        src={cardImage.thumb}
                         loading="lazy"
                         decoding="async"
                         alt={`Card ${num}`}
