@@ -310,7 +310,7 @@ export default function GaristagramUI() {
           .upsert({
             slot_number: img.slot,
             image_url: fullUrl,
-            thumbnail_url: thumbUrl, // ★追加
+            thumbnail_url: thumbUrl,
             is_favorite: !!favorites[img.slot] 
           });
 
