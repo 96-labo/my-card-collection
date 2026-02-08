@@ -61,7 +61,7 @@ export default function GaristagramUI() {
 
   // 300個のカード状態を管理（key: 番号, value: 画像URL）
   // 初期状態はすべて null（未登録 = 裏表紙）
-  const [collection, setCollection] = useState<{ [key: number]: string | null }>({});
+  const [collection, setCollection] = useState<{ [key: number]: { thumb: string, full: string } | null }>({});
   // 1から300までの配列を作成
   const slots = Array.from({ length: 300 }, (_, i) => i + 1);
 
@@ -155,7 +155,7 @@ export default function GaristagramUI() {
       .filter(([_, url]) => url !== null)
       .map(([slot, url]) => ({
         slot_number: parseInt(slot),
-        image_url: url as string,
+        image_url: url!.full,
         is_favorite: !!favorites[parseInt(slot)] // favoritesからお気に入り状態を取得
       }));
   }, [collection, favorites]);
@@ -181,8 +181,7 @@ export default function GaristagramUI() {
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   };
 
-
-// --- 1. アプリ起動時にデータを読み込む ---
+  // --- 1. アプリ起動時にデータを読み込む ---
   useEffect(() => {
     const fetchCollection = async () => {
       // 【追加】① まずはスマホ内の保存データ(キャッシュ)をチェック
@@ -200,7 +199,7 @@ export default function GaristagramUI() {
       // ② 裏で Supabase から最新データを取得
       const { data, error } = await supabase
         .from('card_collection')
-        .select('slot_number, image_url, thumbnail_url, is_favorite')
+        .select('slot_number, image_url, is_favorite')
         .order('slot_number', { ascending: true });
 
       if (error) {
@@ -209,18 +208,21 @@ export default function GaristagramUI() {
       }
 
       if (data) {
-        const newCollection: { [key: number]: string | null } = {};
+        const newCollection: { [key: number]: { thumb: string, full: string } | null } = {};
         const newFavorites: Record<number, boolean> = {};
 
         data.forEach((item: any) => {
-          newCollection[item.slot_number] = item.thumbnail_url || item.image_url;
+          newCollection[item.slot_number] = {
+            thumb: item.thumbnail_url || item.image_url, // サムネイル（なければオリジナル）
+            full: item.image_url                        // オリジナル（高画質）
+          };
           newFavorites[item.slot_number] = item.is_favorite;
         });
 
         setCollection(newCollection);
         setFavorites(newFavorites);
 
-        // 【追加】③ 次回のために最新のデータをスマホに保存
+        // ③ 次回のために最新のデータをスマホに保存
         localStorage.setItem('card_collection_cache', JSON.stringify({
           collection: newCollection,
           favorites: newFavorites
@@ -272,13 +274,13 @@ export default function GaristagramUI() {
     return () => clearInterval(decayTimer);
   }, []);
 
-// 1. 実際に保存を実行する関数（Supabase連携）
+  // 1. 実際に保存を実行する関数（Supabase連携）
   const executeArchive = async () => {
     try {
       const uploadPromises = selectedImages.map(async (img) => {
         // --- A. 高画質オリジナル（保存用） ---
         const originalOptions = {
-          maxSizeMB: 1.0,           // 1MB程度に抑えて画質キープ
+          maxSizeMB: 1.0,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         };
@@ -287,24 +289,28 @@ export default function GaristagramUI() {
 
         // --- B. 超軽量サムネイル（一覧表示用） ---
         const thumbOptions = {
-          maxSizeMB: 0.02,          // ★20KB（爆速設定）
-          maxWidthOrHeight: 200,   // 一覧なら200pxで十分
+          maxSizeMB: 0.02,
+          maxWidthOrHeight: 200,
           useWebWorker: true,
           fileType: 'image/webp'
         };
         const thumbFile = await imageCompression(img.file, thumbOptions);
         const thumbPath = `thumb_${img.slot}_${Date.now()}.webp`;
 
-        // 両方をストレージにアップロード
+        // ストレージにアップロード
         await Promise.all([
           supabase.storage.from('cards').upload(originalPath, originalFile),
           supabase.storage.from('cards').upload(thumbPath, thumbFile)
         ]);
 
-        const fullUrl = supabase.storage.from('cards').getPublicUrl(originalPath).data.publicUrl;
-        const thumbUrl = supabase.storage.from('cards').getPublicUrl(thumbPath).data.publicUrl;
+        // ★ここで変数名を定義します
+        const { data: fullData } = supabase.storage.from('cards').getPublicUrl(originalPath);
+        const { data: thumbData } = supabase.storage.from('cards').getPublicUrl(thumbPath);
+        
+        const fullUrl = fullData.publicUrl;   // ここで fullUrl を定義
+        const thumbUrl = thumbData.publicUrl; // ここで thumbUrl を定義
 
-        // DBには両方のURLを保存（thumbnail_url カラムが必要）
+        // データベースに保存
         const { error: dbError } = await supabase
           .from('card_collection')
           .upsert({
@@ -315,32 +321,44 @@ export default function GaristagramUI() {
           });
 
         if (dbError) throw dbError;
-        return { slot: img.slot, fullUrl, thumbUrl, isFav: !!favorites[img.slot] };
+
+        // ★ここが大事！後の処理（results）に渡す名前
+        return { 
+          slot: img.slot, 
+          fullUrl: fullUrl, 
+          thumbUrl: thumbUrl, 
+          isFav: !!favorites[img.slot] 
+        };
       });
 
       const results = await Promise.all(uploadPromises);
 
-      // Stateとキャッシュの更新
-      const nextCollection = { ...collection };
-      const nextFavorites = { ...favorites };
-      results.forEach(r => {
-        // collectionには表示速度優先でthumbUrlをセット（必要に応じてfullUrlと使い分けてもOK）
-        nextCollection[r.slot] = r.thumbUrl;
-        nextFavorites[r.slot] = r.isFav;
+      // フロントエンドの表示（State）を更新
+      setCollection(prev => {
+        const next = { ...prev };
+        results.forEach(r => {
+          // ここで { thumb, full } の形式でセット
+          next[r.slot] = { 
+            thumb: r.thumbUrl, 
+            full: r.fullUrl 
+          };
+        });
+        return next;
       });
 
-      setCollection(nextCollection);
-      setFavorites(nextFavorites);
-      localStorage.setItem('card_collection_cache', JSON.stringify({
-        collection: nextCollection,
-        favorites: nextFavorites
-      }));
+      setFavorites(prev => {
+        const next = { ...prev };
+        results.forEach(r => next[r.slot] = r.isFav);
+        return next;
+      });
 
-      alert(`${selectedImages.length}枚のアーカイブ完了！`);
-      setSelectedImages([]);
-      setIsConfirmOpen(false);
+      alert(`${selectedImages.length}枚のカードをアーカイブしました！`);
+      setSelectedImages([]); // プレビューリストを空にする
+      setIsConfirmOpen(false); // ダイアログが開いていれば閉じる
+
     } catch (error) {
       console.error("保存失敗:", error);
+      alert("エラーが発生しました。");
     }
   };
 
@@ -376,10 +394,12 @@ export default function GaristagramUI() {
 
       // 3. ストレージからも画像を削除（URLからファイル名を抽出）
       if (imageUrl) {
-        const fileName = imageUrl.split('/').pop(); // URLの最後がファイル名
-        if (fileName) {
-          await supabase.storage.from('cards').remove([fileName]);
-        }
+        const cardData = collection[num]; 
+        if (cardData && cardData.full) { // オブジェクトの中の .full を指定
+          const fileName = cardData.full.split('/').pop();
+          if (fileName) {
+            await supabase.storage.from('cards').remove([fileName]);
+        }}
       }
 
       // 4. Stateを更新
@@ -625,13 +645,11 @@ export default function GaristagramUI() {
               <Dialog key={num}>
                 <DialogTrigger asChild>
                   <Card className={`p-0 bg-[#29082b] rounded-none animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10 overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
-                    <AspectRatio ratio={59 / 86} className="relative group bg-[#1a051b]">
+                    <AspectRatio ratio={59 / 86} className="relative group">
                       <img
-                        src={cardImage}
+                        src={cardImage.full}
                         loading="lazy"
                         decoding="async"
-                        onLoad={(e) => (e.currentTarget.style.opacity = "1")}
-                        style={{ opacity: 0 }}
                         alt={`Card ${num}`}
                         className="object-cover w-full h-full animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10"
                       />
@@ -673,7 +691,7 @@ export default function GaristagramUI() {
                         <div className="relative w-64 scale-110 bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-70 shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl">
                           <AspectRatio ratio={59 / 86} className="rounded-2xl overflow-hidden border-2 border-white/20 bg-black/95 backdrop-blur-md">
                             <img 
-                              src={cardImage || CARD_BACK_IMAGE} 
+                              src={cardImage.full || CARD_BACK_IMAGE} 
                               alt="Preview" 
                               className="object-cover w-full h-full" 
                             />  
