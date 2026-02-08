@@ -185,9 +185,22 @@ export default function GaristagramUI() {
 // --- 1. アプリ起動時にデータを読み込む ---
   useEffect(() => {
     const fetchCollection = async () => {
+      // 【追加】① まずはスマホ内の保存データ(キャッシュ)をチェック
+      const cached = localStorage.getItem('card_collection_cache');
+      if (cached) {
+        try {
+          const { collection: cachedCol, favorites: cachedFav } = JSON.parse(cached);
+          setCollection(cachedCol);
+          setFavorites(cachedFav);
+          // ここで一旦画面が表示されます（爆速！）
+        } catch (e) {
+          console.error("キャッシュ読み込み失敗:", e);
+        }
+      }
+      // ② 裏で Supabase から最新データを取得
       const { data, error } = await supabase
         .from('card_collection')
-        .select('slot_number, image_url, is_favorite')
+        .select('slot_number, image_url, thumbnail_url, is_favorite')
         .order('slot_number', { ascending: true });
 
       if (error) {
@@ -200,12 +213,18 @@ export default function GaristagramUI() {
         const newFavorites: Record<number, boolean> = {};
 
         data.forEach((item: any) => {
-          newCollection[item.slot_number] = item.image_url;
+          newCollection[item.slot_number] = item.thumbnail_url || item.image_url;
           newFavorites[item.slot_number] = item.is_favorite;
         });
 
         setCollection(newCollection);
         setFavorites(newFavorites);
+
+        // 【追加】③ 次回のために最新のデータをスマホに保存
+        localStorage.setItem('card_collection_cache', JSON.stringify({
+          collection: newCollection,
+          favorites: newFavorites
+        }));
       }
     };
 
@@ -253,73 +272,75 @@ export default function GaristagramUI() {
     return () => clearInterval(decayTimer);
   }, []);
 
-  // 1. 実際に保存を実行する関数（Supabase連携）
+// 1. 実際に保存を実行する関数（Supabase連携）
   const executeArchive = async () => {
     try {
       const uploadPromises = selectedImages.map(async (img) => {
-        // --- WebP変換オプション ---
-        const options = {
-          maxSizeMB: 0.5,          // 0.5MB以下に抑える（画質を保ちつつ劇的に軽くなる）
-          maxWidthOrHeight: 1200, // 長辺を1200pxに制限（スマホ表示なら十分すぎる高画質）
+        // --- A. 高画質オリジナル（保存用） ---
+        const originalOptions = {
+          maxSizeMB: 1.0,           // 1MB程度に抑えて画質キープ
+          maxWidthOrHeight: 1600,
           useWebWorker: true,
-          fileType: 'image/webp'  // ここで WebP を指定！
         };
+        const originalFile = await imageCompression(img.file, originalOptions);
+        const originalPath = `full_${img.slot}_${Date.now()}.webp`;
 
-        // 実際に圧縮・変換
-        const compressedFile = await imageCompression(img.file, options);
-        
-        // 保存するファイル名を .webp に変更
-        const fileName = `${img.slot}_${Date.now()}.webp`;
+        // --- B. 超軽量サムネイル（一覧表示用） ---
+        const thumbOptions = {
+          maxSizeMB: 0.02,          // ★20KB（爆速設定）
+          maxWidthOrHeight: 200,   // 一覧なら200pxで十分
+          useWebWorker: true,
+          fileType: 'image/webp'
+        };
+        const thumbFile = await imageCompression(img.file, thumbOptions);
+        const thumbPath = `thumb_${img.slot}_${Date.now()}.webp`;
 
-        // a. 画像をストレージにアップロード
-        const { error: storageError } = await supabase.storage
-          .from('cards')
-          .upload(fileName, compressedFile);
+        // 両方をストレージにアップロード
+        await Promise.all([
+          supabase.storage.from('cards').upload(originalPath, originalFile),
+          supabase.storage.from('cards').upload(thumbPath, thumbFile)
+        ]);
 
-        if (storageError) throw storageError;
+        const fullUrl = supabase.storage.from('cards').getPublicUrl(originalPath).data.publicUrl;
+        const thumbUrl = supabase.storage.from('cards').getPublicUrl(thumbPath).data.publicUrl;
 
-        // b. 公開URLを取得
-        const { data: { publicUrl } } = supabase.storage
-          .from('cards')
-          .getPublicUrl(fileName);
-
-        // c. データベースに情報を保存 (upsert)
+        // DBには両方のURLを保存（thumbnail_url カラムが必要）
         const { error: dbError } = await supabase
-        .from('card_collection')
-        .upsert({
-          slot_number: img.slot,
-          image_url: publicUrl,
-          // img.isFavorite ではなく、現在の favorites State から取得する
-          is_favorite: !!favorites[img.slot] 
-        });
+          .from('card_collection')
+          .upsert({
+            slot_number: img.slot,
+            image_url: fullUrl,
+            thumbnail_url: thumbUrl, // ★追加
+            is_favorite: !!favorites[img.slot] 
+          });
 
         if (dbError) throw dbError;
-
-        return { slot: img.slot, url: publicUrl, isFav: !!favorites[img.slot] };
+        return { slot: img.slot, fullUrl, thumbUrl, isFav: !!favorites[img.slot] };
       });
 
-      // すべてのアップロードが完了するのを待つ
       const results = await Promise.all(uploadPromises);
 
-      // フロントエンドの表示（State）を更新
-      setCollection(prev => {
-        const next = { ...prev };
-        results.forEach(r => next[r.slot] = r.url);
-        return next;
-      });
-      setFavorites(prev => {
-        const next = { ...prev };
-        results.forEach(r => next[r.slot] = r.isFav);
-        return next;
+      // Stateとキャッシュの更新
+      const nextCollection = { ...collection };
+      const nextFavorites = { ...favorites };
+      results.forEach(r => {
+        // collectionには表示速度優先でthumbUrlをセット（必要に応じてfullUrlと使い分けてもOK）
+        nextCollection[r.slot] = r.thumbUrl;
+        nextFavorites[r.slot] = r.isFav;
       });
 
-      alert(`${selectedImages.length}枚のカードをアーカイブしました！`);
-      setSelectedImages([]); // プレビューリストを空にする
-      setIsConfirmOpen(false); // ダイアログが開いていれば閉じる
+      setCollection(nextCollection);
+      setFavorites(nextFavorites);
+      localStorage.setItem('card_collection_cache', JSON.stringify({
+        collection: nextCollection,
+        favorites: nextFavorites
+      }));
 
+      alert(`${selectedImages.length}枚のアーカイブ完了！`);
+      setSelectedImages([]);
+      setIsConfirmOpen(false);
     } catch (error) {
       console.error("保存失敗:", error);
-      alert("エラーが発生しました。");
     }
   };
 
@@ -604,11 +625,13 @@ export default function GaristagramUI() {
               <Dialog key={num}>
                 <DialogTrigger asChild>
                   <Card className={`p-0 bg-[#29082b] rounded-none animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10 overflow-hidden transition-all cursor-pointer border-none shadow-md ${cardImage ? 'hover:ring-4 ring-yellow-400' : 'hover:scale-105'}`}>
-                    <AspectRatio ratio={59 / 86} className="relative group">
+                    <AspectRatio ratio={59 / 86} className="relative group bg-[#1a051b]">
                       <img
                         src={cardImage}
                         loading="lazy"
                         decoding="async"
+                        onLoad={(e) => (e.currentTarget.style.opacity = "1")}
+                        style={{ opacity: 0 }}
                         alt={`Card ${num}`}
                         className="object-cover w-full h-full animate-in zoom-in-95 fade-in duration-300 slide-in-from-bottom-10"
                       />
